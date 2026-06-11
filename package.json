@@ -19,7 +19,6 @@
   ],
   "scripts": {
     "build": "tsup",
-    "prepare": "tsup",
     "dev": "cd dev && npm run dev",
     "typecheck": "tsc --noEmit"
   },
