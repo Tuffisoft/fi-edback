@@ -2,9 +2,8 @@ import type { NextConfig } from "next";
 import path from "path";
 
 const nextConfig: NextConfig = {
-  // Tell Turbopack not to bundle these — they must be required at runtime
-  // by Node.js directly. @neondatabase/serverless uses node internals that
-  // break when bundled by Turbopack.
+  // @neondatabase/serverless uses Node.js internals (net, tls) that cannot
+  // be bundled by Turbopack — it must be loaded natively by Node at runtime.
   serverExternalPackages: ["@neondatabase/serverless"],
   turbopack: {
     // Point to repo root so Turbopack resolves node_modules/fi-edback

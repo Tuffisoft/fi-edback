@@ -17,7 +17,7 @@ Feedback is stored in a shared Neon PostgreSQL database, keyed by project slug.
 
 ```bash
 npm i github:Tuffisoft/fi-edback
-npm i @neondatabase/serverless zod
+npm i @neondatabase/serverless zod@~3.23.8
 ```
 
 ### 1. Route handler — `app/api/fi-edback/route.ts`
@@ -48,6 +48,8 @@ export default function RootLayout({ children }) {
 
 ```ts
 const nextConfig = {
+  // @neondatabase/serverless uses Node.js internals and cannot be bundled
+  // by Turbopack — it must be loaded natively by Node at runtime.
   serverExternalPackages: ['@neondatabase/serverless'],
 }
 export default nextConfig
