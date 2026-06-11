@@ -1,12 +1,12 @@
-import { z } from "zod";
-
 /**
  * Returns a fresh Zod schema for a feedback submission.
- * Called inside the route handler (not at module level) to avoid top-level
- * evaluation of z.object() — which fails when Turbopack bundles the server
- * chunk and the zod ESM export resolves before module initialisation completes.
+ *
+ * Zod is imported dynamically (not at module top-level) to avoid Turbopack
+ * evaluating the ESM export before module initialisation completes, which
+ * causes `(void 0) is not a function` during server chunk evaluation.
  */
-export function getFeedbackSchema() {
+export async function getFeedbackSchema() {
+  const { z } = await import("zod");
   return z.object({
     projectSlug: z.string().min(1).max(100),
     pageUrl: z.string().url(),
@@ -14,7 +14,6 @@ export function getFeedbackSchema() {
     y: z.number().finite(),
     message: z.string().min(1, "Message is required").max(2000),
     name: z.string().max(100).optional(),
-    // Allow empty string (user cleared the field) or a valid email
     email: z
       .string()
       .max(200)
@@ -29,4 +28,4 @@ export function getFeedbackSchema() {
   });
 }
 
-export type FeedbackInput = ReturnType<typeof getFeedbackSchema>["_type"];
+export type FeedbackInput = Awaited<ReturnType<typeof getFeedbackSchema>>["_type"];

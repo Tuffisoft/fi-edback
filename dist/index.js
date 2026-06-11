@@ -4,8 +4,8 @@ import {
 } from "./chunk-SSW72WGR.js";
 
 // src/lib/validation.ts
-import { z } from "zod";
-function getFeedbackSchema() {
+async function getFeedbackSchema() {
+  const { z } = await import("zod");
   return z.object({
     projectSlug: z.string().min(1).max(100),
     pageUrl: z.string().url(),
@@ -13,7 +13,6 @@ function getFeedbackSchema() {
     y: z.number().finite(),
     message: z.string().min(1, "Message is required").max(2e3),
     name: z.string().max(100).optional(),
-    // Allow empty string (user cleared the field) or a valid email
     email: z.string().max(200).refine((v) => v === "" || z.string().email().safeParse(v).success, {
       message: "Must be a valid email address"
     }).optional(),
@@ -89,7 +88,7 @@ function createFeedbackRouteHandler() {
     } catch {
       return Response.json({ error: "Invalid JSON body" }, { status: 400 });
     }
-    const parsed = getFeedbackSchema().safeParse(body);
+    const parsed = (await getFeedbackSchema()).safeParse(body);
     if (!parsed.success) {
       return Response.json(
         {

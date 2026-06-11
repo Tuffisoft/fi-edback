@@ -29,7 +29,7 @@ export function createFeedbackRouteHandler(): { POST: RouteHandler } {
       return Response.json({ error: "Invalid JSON body" }, { status: 400 });
     }
 
-    const parsed = getFeedbackSchema().safeParse(body);
+    const parsed = (await getFeedbackSchema()).safeParse(body);
     if (!parsed.success) {
       return Response.json(
         {
