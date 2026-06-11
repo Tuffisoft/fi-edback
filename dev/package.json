@@ -9,7 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "fi-edback": "file:..",
+    "fi-edback": "github:Tuffisoft/fi-edback",
     "next": "16.2.9",
     "react": "19.2.4",
     "react-dom": "19.2.4"
