@@ -25,7 +25,9 @@
     "paths": {
       "@/*": [
         "./src/*"
-      ]
+      ],
+      "fi-edback": ["../dist/index.d.ts"],
+      "fi-edback/client": ["../dist/client.d.ts"]
     }
   },
   "include": [
