@@ -4,6 +4,9 @@ import {
   SESSION_COOKIE_NAME
 } from "./chunk-SSW72WGR.js";
 
+// src/components/FeedbackRoot.tsx
+import { useState as useState3, useEffect as useEffect2 } from "react";
+
 // src/components/FeedbackLauncher.tsx
 import { useState as useState2 } from "react";
 
@@ -136,7 +139,9 @@ function FeedbackForm({
       });
       if (res.status === 429) {
         setStatus("error");
-        setErrorText("Too many submissions \u2014 please wait a moment before trying again.");
+        setErrorText(
+          "Too many submissions \u2014 please wait a moment before trying again."
+        );
         return;
       }
       if (!res.ok) {
@@ -154,7 +159,9 @@ function FeedbackForm({
       }, 900);
     } catch {
       setStatus("error");
-      setErrorText("Network error \u2014 please check your connection and try again.");
+      setErrorText(
+        "Network error \u2014 please check your connection and try again."
+      );
     }
   }
   const viewportX = x - window.scrollX;
@@ -193,11 +200,17 @@ function FeedbackForm({
         fontFamily: "system-ui, sans-serif",
         fontSize: "14px"
       },
-      children: status === "success" ? /* @__PURE__ */ jsxs("div", { style: { textAlign: "center", padding: "20px 0", color: "#16a34a" }, children: [
-        /* @__PURE__ */ jsx3("div", { style: { fontSize: "28px", marginBottom: "8px" }, children: "\u2713" }),
-        /* @__PURE__ */ jsx3("div", { style: { fontWeight: "600", color: "#18181b" }, children: "Feedback sent!" }),
-        /* @__PURE__ */ jsx3("div", { style: { color: "#71717a", fontSize: "13px", marginTop: "4px" }, children: "Thanks for taking the time." })
-      ] }) : /* @__PURE__ */ jsxs("form", { onSubmit: handleSubmit, children: [
+      children: status === "success" ? /* @__PURE__ */ jsxs(
+        "div",
+        {
+          style: { textAlign: "center", padding: "20px 0", color: "#16a34a" },
+          children: [
+            /* @__PURE__ */ jsx3("div", { style: { fontSize: "28px", marginBottom: "8px" }, children: "\u2713" }),
+            /* @__PURE__ */ jsx3("div", { style: { fontWeight: "600", color: "#18181b" }, children: "Feedback sent!" }),
+            /* @__PURE__ */ jsx3("div", { style: { color: "#71717a", fontSize: "13px", marginTop: "4px" }, children: "Thanks for taking the time." })
+          ]
+        }
+      ) : /* @__PURE__ */ jsxs("form", { onSubmit: handleSubmit, children: [
         /* @__PURE__ */ jsx3(
           "div",
           {
@@ -268,46 +281,52 @@ function FeedbackForm({
             children: errorText
           }
         ),
-        /* @__PURE__ */ jsxs("div", { style: { display: "flex", gap: "8px", justifyContent: "flex-end" }, children: [
-          /* @__PURE__ */ jsx3(
-            "button",
-            {
-              type: "button",
-              onClick: onCancelled,
-              style: {
-                padding: "7px 14px",
-                borderRadius: "6px",
-                border: "1px solid #e4e4e7",
-                backgroundColor: "transparent",
-                fontSize: "13px",
-                cursor: "pointer",
-                color: "#71717a",
-                fontFamily: "system-ui, sans-serif"
-              },
-              children: "Cancel"
-            }
-          ),
-          /* @__PURE__ */ jsx3(
-            "button",
-            {
-              type: "submit",
-              disabled: status === "submitting" || !message.trim(),
-              style: {
-                padding: "7px 14px",
-                borderRadius: "6px",
-                border: "none",
-                backgroundColor: "#18181b",
-                color: "#fff",
-                fontSize: "13px",
-                fontWeight: "500",
-                cursor: status === "submitting" || !message.trim() ? "not-allowed" : "pointer",
-                opacity: status === "submitting" || !message.trim() ? 0.5 : 1,
-                fontFamily: "system-ui, sans-serif"
-              },
-              children: status === "submitting" ? "Sending\u2026" : "Send"
-            }
-          )
-        ] })
+        /* @__PURE__ */ jsxs(
+          "div",
+          {
+            style: { display: "flex", gap: "8px", justifyContent: "flex-end" },
+            children: [
+              /* @__PURE__ */ jsx3(
+                "button",
+                {
+                  type: "button",
+                  onClick: onCancelled,
+                  style: {
+                    padding: "7px 14px",
+                    borderRadius: "6px",
+                    border: "1px solid #e4e4e7",
+                    backgroundColor: "transparent",
+                    fontSize: "13px",
+                    cursor: "pointer",
+                    color: "#71717a",
+                    fontFamily: "system-ui, sans-serif"
+                  },
+                  children: "Cancel"
+                }
+              ),
+              /* @__PURE__ */ jsx3(
+                "button",
+                {
+                  type: "submit",
+                  disabled: status === "submitting" || !message.trim(),
+                  style: {
+                    padding: "7px 14px",
+                    borderRadius: "6px",
+                    border: "none",
+                    backgroundColor: "#18181b",
+                    color: "#fff",
+                    fontSize: "13px",
+                    fontWeight: "500",
+                    cursor: status === "submitting" || !message.trim() ? "not-allowed" : "pointer",
+                    opacity: status === "submitting" || !message.trim() ? 0.5 : 1,
+                    fontFamily: "system-ui, sans-serif"
+                  },
+                  children: status === "submitting" ? "Sending\u2026" : "Send"
+                }
+              )
+            ]
+          }
+        )
       ] })
     }
   );
@@ -318,7 +337,9 @@ import { Fragment as Fragment2, jsx as jsx4, jsxs as jsxs2 } from "react/jsx-run
 function FeedbackLauncher({ projectSlug }) {
   const [isActive, setIsActive] = useState2(false);
   const [pins, setPins] = useState2([]);
-  const [pendingPin, setPendingPin] = useState2(null);
+  const [pendingPin, setPendingPin] = useState2(
+    null
+  );
   function handleActivate() {
     setIsActive(true);
   }
@@ -406,6 +427,11 @@ function FeedbackLauncher({ projectSlug }) {
 // src/components/FeedbackRoot.tsx
 import { jsx as jsx5 } from "react/jsx-runtime";
 function FeedbackRoot() {
+  const [mounted, setMounted] = useState3(false);
+  useEffect2(() => {
+    setMounted(true);
+  }, []);
+  if (!mounted) return null;
   if (process.env.NEXT_PUBLIC_ENABLE_FEEDBACK !== "true") return null;
   const projectSlug = process.env.NEXT_PUBLIC_FEEDBACK_PROJECT_SLUG;
   if (!projectSlug) return null;

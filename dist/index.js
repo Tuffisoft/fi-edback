@@ -90,7 +90,10 @@ function createFeedbackRouteHandler() {
     const parsed = feedbackSchema.safeParse(body);
     if (!parsed.success) {
       return Response.json(
-        { error: "Validation failed", issues: parsed.error.flatten().fieldErrors },
+        {
+          error: "Validation failed",
+          issues: parsed.error.flatten().fieldErrors
+        },
         { status: 400 }
       );
     }
@@ -120,7 +123,10 @@ function createFeedbackRouteHandler() {
       return Response.json({ ok: true });
     } catch (error) {
       console.error("[fi-edback] Database error:", error);
-      return Response.json({ error: "Failed to save feedback" }, { status: 500 });
+      return Response.json(
+        { error: "Failed to save feedback" },
+        { status: 500 }
+      );
     }
   };
   return { POST };
