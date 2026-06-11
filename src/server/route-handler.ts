@@ -46,7 +46,7 @@ export function createFeedbackRouteHandler(): { POST: RouteHandler } {
       return Response.json({ ok: true });
     }
 
-    const sql = getNeonClient(databaseUrl);
+    const sql = await getNeonClient(databaseUrl);
 
     try {
       const limited = await isRateLimited(sql, parsed.data.sessionId);

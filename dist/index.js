@@ -24,11 +24,11 @@ async function getFeedbackSchema() {
 }
 
 // src/lib/db/client.ts
-import { neon } from "@neondatabase/serverless";
 var clientCache = /* @__PURE__ */ new Map();
-function getNeonClient(databaseUrl) {
+async function getNeonClient(databaseUrl) {
   const cached = clientCache.get(databaseUrl);
   if (cached) return cached;
+  const { neon } = await import("@neondatabase/serverless");
   const client = neon(databaseUrl);
   clientCache.set(databaseUrl, client);
   return client;
@@ -101,7 +101,7 @@ function createFeedbackRouteHandler() {
     if (body.website !== "") {
       return Response.json({ ok: true });
     }
-    const sql = getNeonClient(databaseUrl);
+    const sql = await getNeonClient(databaseUrl);
     try {
       const limited = await isRateLimited(sql, parsed.data.sessionId);
       if (limited) {
