@@ -1,11 +1,11 @@
-import type { NextConfig } from 'next'
-import path from 'path'
+import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
-  transpilePackages: ['fi-edback'],
+  transpilePackages: ["fi-edback"],
   turbopack: {
     root: path.resolve(__dirname),
   },
-}
+};
 
-export default nextConfig
+export default nextConfig;
