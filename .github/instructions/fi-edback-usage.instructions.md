@@ -44,6 +44,15 @@ export default function RootLayout({ children }) {
 }
 ```
 
+### 3. `next.config.ts` — add `serverExternalPackages`
+
+```ts
+const nextConfig = {
+  serverExternalPackages: ['@neondatabase/serverless'],
+}
+export default nextConfig
+```
+
 ### 3. Environment variables
 
 Set these in Vercel → Project Settings → Environment Variables.
