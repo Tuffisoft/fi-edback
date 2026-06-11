@@ -435,6 +435,7 @@ function FeedbackRoot() {
   if (process.env.NEXT_PUBLIC_ENABLE_FEEDBACK !== "true") return null;
   const projectSlug = process.env.NEXT_PUBLIC_FEEDBACK_PROJECT_SLUG;
   if (!projectSlug) return null;
+  if (window.innerWidth < 768) return null;
   return /* @__PURE__ */ jsx5(FeedbackLauncher, { projectSlug });
 }
 export {
