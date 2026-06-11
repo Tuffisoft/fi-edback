@@ -1,6 +1,6 @@
 {
   "installCommand": "npm install && cd dev && npm install",
-  "buildCommand": "npm run build && cp -r dist dev/node_modules/fi-edback/ && cd dev && npm run build",
+  "buildCommand": "echo '=== fi-edback link type ===' && ls -la dev/node_modules/fi-edback && echo '=== dist/index.js before build ===' && head -40 dist/index.js && npm run build && echo '=== dist/index.js after build ===' && head -40 dist/index.js && echo '=== fi-edback dist used by Next.js ===' && head -40 dev/node_modules/fi-edback/dist/index.js && cd dev && npm run build",
   "outputDirectory": "dev/.next",
   "framework": "nextjs"
 }
