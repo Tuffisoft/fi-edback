@@ -50,7 +50,7 @@ export default function RootLayout({ children }) {
 const nextConfig = {
   // @neondatabase/serverless uses Node.js internals and cannot be bundled
   // by Turbopack — it must be loaded natively by Node at runtime.
-  serverExternalPackages: ['@neondatabase/serverless'],
+  serverExternalPackages: ['@neondatabase/serverless', 'fi-edback'],
 }
 export default nextConfig
 ```
