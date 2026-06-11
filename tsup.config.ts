@@ -9,8 +9,7 @@ export default defineConfig({
   dts: true,
   sourcemap: false,
   clean: true,
-  // Keep peer deps and runtime deps as external imports — they are listed in
-  // dependencies so npm installs them automatically in the host project.
+  splitting: false,
   external: ["react", "react-dom", "next", "@neondatabase/serverless", "zod"],
   outDir: "dist",
 });

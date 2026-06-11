@@ -1,8 +1,4 @@
 "use client";
-import {
-  API_PATH,
-  SESSION_COOKIE_NAME
-} from "./chunk-SSW72WGR.js";
 
 // src/components/FeedbackRoot.tsx
 import { useState as useState3, useEffect as useEffect2 } from "react";
@@ -69,6 +65,10 @@ function FeedbackPinLayer({ pins }) {
 
 // src/components/FeedbackForm.tsx
 import { useState, useEffect, useRef } from "react";
+
+// src/lib/config.ts
+var API_PATH = "/api/fi-edback";
+var SESSION_COOKIE_NAME = "fi_session";
 
 // src/lib/session.ts
 function generateId() {

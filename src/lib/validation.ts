@@ -1,12 +1,6 @@
-/**
- * Returns a fresh Zod schema for a feedback submission.
- *
- * Zod is imported dynamically (not at module top-level) to avoid Turbopack
- * evaluating the ESM export before module initialisation completes, which
- * causes `(void 0) is not a function` during server chunk evaluation.
- */
-export async function getFeedbackSchema() {
-  const { z } = await import("zod");
+import { z } from "zod";
+
+export function getFeedbackSchema() {
   return z.object({
     projectSlug: z.string().min(1).max(100),
     pageUrl: z.string().url(),
@@ -28,4 +22,4 @@ export async function getFeedbackSchema() {
   });
 }
 
-export type FeedbackInput = Awaited<ReturnType<typeof getFeedbackSchema>>["_type"];
+export type FeedbackInput = ReturnType<typeof getFeedbackSchema>["_type"];

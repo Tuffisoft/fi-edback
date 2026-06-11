@@ -4,17 +4,22 @@
   "description": "Reusable visual feedback widget for Next.js Vercel preview deployments",
   "license": "MIT",
   "private": true,
+  "files": [
+    "dist"
+  ],
   "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
+      "require": "./dist/index.cjs",
       "import": "./dist/index.js",
-      "default": "./dist/index.js"
+      "default": "./dist/index.cjs"
     },
     "./client": {
       "types": "./dist/client.d.ts",
+      "require": "./dist/client.cjs",
       "import": "./dist/client.js",
-      "default": "./dist/client.js"
+      "default": "./dist/client.cjs"
     }
   },
   "scripts": {

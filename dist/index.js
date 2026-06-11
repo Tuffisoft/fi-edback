@@ -1,11 +1,6 @@
-import {
-  RATE_LIMIT_MAX,
-  RATE_LIMIT_WINDOW_SECONDS
-} from "./chunk-SSW72WGR.js";
-
 // src/lib/validation.ts
-async function getFeedbackSchema() {
-  const { z } = await import("zod");
+import { z } from "zod";
+function getFeedbackSchema() {
   return z.object({
     projectSlug: z.string().min(1).max(100),
     pageUrl: z.string().url(),
@@ -33,6 +28,10 @@ async function getNeonClient(databaseUrl) {
   clientCache.set(databaseUrl, client);
   return client;
 }
+
+// src/lib/config.ts
+var RATE_LIMIT_MAX = 5;
+var RATE_LIMIT_WINDOW_SECONDS = 60;
 
 // src/lib/db/queries.ts
 async function insertFeedback(sql, payload) {
@@ -88,7 +87,7 @@ function createFeedbackRouteHandler() {
     } catch {
       return Response.json({ error: "Invalid JSON body" }, { status: 400 });
     }
-    const parsed = (await getFeedbackSchema()).safeParse(body);
+    const parsed = getFeedbackSchema().safeParse(body);
     if (!parsed.success) {
       return Response.json(
         {
