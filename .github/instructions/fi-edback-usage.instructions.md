@@ -23,14 +23,14 @@ npm i @neondatabase/serverless zod@~3.23.8
 ### 1. Route handler — `app/api/fi-edback/route.ts`
 
 ```ts
-import { createFeedbackRouteHandler } from 'fi-edback'
-export const { POST } = createFeedbackRouteHandler()
+import { createFeedbackRouteHandler } from "fi-edback";
+export const { POST } = createFeedbackRouteHandler();
 ```
 
 ### 2. Root layout — add `<FeedbackRoot />` inside `<body>`
 
 ```tsx
-import { FeedbackRoot } from 'fi-edback/client'
+import { FeedbackRoot } from "fi-edback/client";
 
 export default function RootLayout({ children }) {
   return (
@@ -40,7 +40,7 @@ export default function RootLayout({ children }) {
         <FeedbackRoot />
       </body>
     </html>
-  )
+  );
 }
 ```
 
@@ -52,9 +52,9 @@ const nextConfig = {
   // by Turbopack — it must be loaded natively by Node at runtime.
   // fi-edback must also be external so Turbopack does not attempt to
   // bundle and statically evaluate its server entry at build time.
-  serverExternalPackages: ['@neondatabase/serverless', 'fi-edback'],
-}
-export default nextConfig
+  serverExternalPackages: ["@neondatabase/serverless", "fi-edback"],
+};
+export default nextConfig;
 ```
 
 ### 3. Environment variables
@@ -62,11 +62,11 @@ export default nextConfig
 Set these in Vercel → Project Settings → Environment Variables.
 For preview-only behaviour, scope them to the **Preview** environment only.
 
-| Variable | Example value | Notes |
-|---|---|---|
-| `DATABASE_URL` | `postgresql://...pooler.neon.tech/...` | Neon pooled connection string — server only |
-| `NEXT_PUBLIC_ENABLE_FEEDBACK` | `true` | Omit or set `false` for production |
-| `NEXT_PUBLIC_FEEDBACK_PROJECT_SLUG` | `client-acme` | Tags all feedback rows for this project |
+| Variable                            | Example value                          | Notes                                       |
+| ----------------------------------- | -------------------------------------- | ------------------------------------------- |
+| `DATABASE_URL`                      | `postgresql://...pooler.neon.tech/...` | Neon pooled connection string — server only |
+| `NEXT_PUBLIC_ENABLE_FEEDBACK`       | `true`                                 | Omit or set `false` for production          |
+| `NEXT_PUBLIC_FEEDBACK_PROJECT_SLUG` | `client-acme`                          | Tags all feedback rows for this project     |
 
 ## How it works
 
@@ -97,10 +97,10 @@ Run `SQL_MIGRATION.sql` (in the fi-edback repo) once in the Neon console to crea
 
 ## Troubleshooting
 
-| Symptom | Cause | Fix |
-|---|---|---|
-| Button not visible | `NEXT_PUBLIC_ENABLE_FEEDBACK` not `"true"` | Check env vars and restart dev server |
-| Button not visible | `NEXT_PUBLIC_FEEDBACK_PROJECT_SLUG` missing | Set the slug env var |
-| POST returns 500 | `DATABASE_URL` not set | Add server-side env var |
-| POST returns 429 | Rate limit exceeded (5 per 60s per session) | Wait 60 seconds |
-| Hydration error | Old version without mounted guard | Update to latest |
+| Symptom            | Cause                                       | Fix                                   |
+| ------------------ | ------------------------------------------- | ------------------------------------- |
+| Button not visible | `NEXT_PUBLIC_ENABLE_FEEDBACK` not `"true"`  | Check env vars and restart dev server |
+| Button not visible | `NEXT_PUBLIC_FEEDBACK_PROJECT_SLUG` missing | Set the slug env var                  |
+| POST returns 500   | `DATABASE_URL` not set                      | Add server-side env var               |
+| POST returns 429   | Rate limit exceeded (5 per 60s per session) | Wait 60 seconds                       |
+| Hydration error    | Old version without mounted guard           | Update to latest                      |
