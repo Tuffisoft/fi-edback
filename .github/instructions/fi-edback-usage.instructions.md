@@ -13,6 +13,13 @@ Feedback is stored in a shared Neon PostgreSQL database, keyed by project slug.
 
 ## Integration (3 files)
 
+### 0. Install
+
+```bash
+npm i github:Tuffisoft/fi-edback
+npm i @neondatabase/serverless zod
+```
+
 ### 1. Route handler — `app/api/fi-edback/route.ts`
 
 ```ts

@@ -17,7 +17,8 @@ Floating visual feedback widget for Next.js preview deployments. Clients click a
 ### Install
 
 ```bash
-npm i github:studiofi/fi-edback
+npm i github:Tuffisoft/fi-edback
+npm i @neondatabase/serverless zod
 ```
 
 ### 1. Route handler — `app/api/fi-edback/route.ts`
