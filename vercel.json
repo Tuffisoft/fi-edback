@@ -1,6 +1,6 @@
 {
-  "buildCommand": "cd dev && npm run build",
+  "buildCommand": "bash scripts/vercel-build.sh",
   "outputDirectory": "dev/.next",
-  "installCommand": "npm install && npm run build && cd dev && npm install --install-links",
+  "installCommand": "npm install && cd dev && npm install --install-links",
   "framework": "nextjs"
 }

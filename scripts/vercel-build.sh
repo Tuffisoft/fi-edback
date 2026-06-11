@@ -3,8 +3,10 @@ set -e
 
 npm run build
 
-echo "=== Clearing Next.js cache ==="
-rm -rf dev/.next/cache
-echo "=== Cache cleared, starting Next.js build ==="
+echo "=== node_modules/fi-edback link type ==="
+ls -la dev/node_modules/fi-edback
+
+echo "=== head of actual dist used by Next.js ==="
+head -35 dev/node_modules/fi-edback/dist/index.js || echo "MISSING"
 
 cd dev && npm run build
