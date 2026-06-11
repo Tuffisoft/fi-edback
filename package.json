@@ -16,9 +16,6 @@
       "default": "./dist/client.js"
     }
   },
-  "files": [
-    "dist"
-  ],
   "scripts": {
     "build": "tsup",
     "dev": "cd dev && npm run dev",
