@@ -1,4 +1,4 @@
-import { feedbackSchema } from "../lib/validation";
+import { getFeedbackSchema } from "../lib/validation";
 import { getNeonClient } from "../lib/db/client";
 import { insertFeedback, isRateLimited } from "../lib/db/queries";
 
@@ -29,7 +29,7 @@ export function createFeedbackRouteHandler(): { POST: RouteHandler } {
       return Response.json({ error: "Invalid JSON body" }, { status: 400 });
     }
 
-    const parsed = feedbackSchema.safeParse(body);
+    const parsed = getFeedbackSchema().safeParse(body);
     if (!parsed.success) {
       return Response.json(
         {

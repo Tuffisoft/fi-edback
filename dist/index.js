@@ -5,22 +5,24 @@ import {
 
 // src/lib/validation.ts
 import { z } from "zod";
-var feedbackSchema = z.object({
-  projectSlug: z.string().min(1).max(100),
-  pageUrl: z.string().url(),
-  x: z.number().finite(),
-  y: z.number().finite(),
-  message: z.string().min(1, "Message is required").max(2e3),
-  name: z.string().max(100).optional(),
-  // Allow empty string (user cleared the field) or a valid email
-  email: z.string().max(200).refine((v) => v === "" || z.string().email().safeParse(v).success, {
-    message: "Must be a valid email address"
-  }).optional(),
-  sessionId: z.string().min(1).max(128),
-  userAgent: z.string().max(500).optional(),
-  // Honeypot field — must be an empty string; bots fill it in
-  website: z.literal("")
-});
+function getFeedbackSchema() {
+  return z.object({
+    projectSlug: z.string().min(1).max(100),
+    pageUrl: z.string().url(),
+    x: z.number().finite(),
+    y: z.number().finite(),
+    message: z.string().min(1, "Message is required").max(2e3),
+    name: z.string().max(100).optional(),
+    // Allow empty string (user cleared the field) or a valid email
+    email: z.string().max(200).refine((v) => v === "" || z.string().email().safeParse(v).success, {
+      message: "Must be a valid email address"
+    }).optional(),
+    sessionId: z.string().min(1).max(128),
+    userAgent: z.string().max(500).optional(),
+    // Honeypot field — must be an empty string; bots fill it in
+    website: z.literal("")
+  });
+}
 
 // src/lib/db/client.ts
 import { neon } from "@neondatabase/serverless";
@@ -87,7 +89,7 @@ function createFeedbackRouteHandler() {
     } catch {
       return Response.json({ error: "Invalid JSON body" }, { status: 400 });
     }
-    const parsed = feedbackSchema.safeParse(body);
+    const parsed = getFeedbackSchema().safeParse(body);
     if (!parsed.success) {
       return Response.json(
         {
