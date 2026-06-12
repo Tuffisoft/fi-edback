@@ -43,7 +43,7 @@ SQL_MIGRATION.sql       ← run once in Neon console to create fi_feedback table
 - Rate limiting is DB-based (count rows for sessionId in last 60s) — no Redis needed
 - The honeypot field is named `website` — it must be an empty string (`z.literal('')`) in the Zod schema
 - Coordinates are document-relative (`clientX + scrollX`, `clientY + scrollY`) — not viewport-relative
-- `dist/` is committed to git so `npm i github:studiofi/fi-edback` works without a build step
+- `dist/` is committed to git so `npm i github:Tuffisoft/fi-edback` works without a build step
 
 ## Features
 

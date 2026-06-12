@@ -157,7 +157,7 @@ the widget renders nothing and no requests are made. No code changes needed.
 ```bash
 npm update fi-edback
 # or pin a specific commit:
-npm i github:studiofi/fi-edback#<commit-sha>
+npm i github:Tuffisoft/fi-edback#<commit-sha>
 ```
 
 ## Database

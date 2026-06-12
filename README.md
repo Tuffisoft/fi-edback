@@ -76,7 +76,7 @@ Scope `NEXT_PUBLIC_*` vars to **Preview** only so the widget never appears in pr
 
 ### Per-project checklist
 
-- [ ] `npm i github:studiofi/fi-edback`
+- [ ] `npm i github:Tuffisoft/fi-edback`
 - [ ] Create `app/api/fi-edback/route.ts`
 - [ ] Add `<FeedbackRoot />` to root layout
 - [ ] Set `DATABASE_URL` on Vercel (all scopes)
@@ -120,7 +120,7 @@ npm run dev                         # opens on localhost:3000
 ```bash
 npm update fi-edback
 # or pin a specific commit:
-npm i github:studiofi/fi-edback#<commit-sha>
+npm i github:Tuffisoft/fi-edback#<commit-sha>
 ```
 
 After upgrading, rebuild if you've modified source:
