@@ -53,7 +53,10 @@ export function FeedbackPopup({
   const popupWidth = 300;
   const popupMaxHeight = 400;
   const left = Math.min(viewportX + 14, window.innerWidth - popupWidth - 12);
-  const top = Math.min(viewportY + 14, window.innerHeight - popupMaxHeight - 12);
+  const top = Math.min(
+    viewportY + 14,
+    window.innerHeight - popupMaxHeight - 12,
+  );
 
   return (
     <>

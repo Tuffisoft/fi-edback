@@ -61,8 +61,8 @@ export async function getFeedbackForPage(
       AND page_url = ${pageUrl}
     ORDER BY created_at DESC
   `;
-  
-  return rows.map(row => ({
+
+  return rows.map((row) => ({
     ...row,
     createdAt: new Date(row.createdAt as string),
   })) as FeedbackRow[];
@@ -80,7 +80,7 @@ export async function deleteFeedback(
     DELETE FROM fi_feedback
     WHERE id = ${id}
   `;
-  
+
   return result.count > 0;
 }
 

@@ -3,6 +3,7 @@
 Floating visual feedback widget for Next.js preview deployments. Clients click anywhere on the page to drop a pin and leave a message. All submissions go to a shared Neon PostgreSQL database, separated by project slug.
 
 **Features**:
+
 - ✅ Persistent pins — all feedback visible to everyone
 - ✅ Clickable pins — view message, author, and timestamp
 - ✅ Delete feedback — anyone can delete (no auth)
@@ -36,6 +37,7 @@ export const { GET, POST, DELETE } = createFeedbackRouteHandler();
 ```
 
 Provides:
+
 - `POST` — submit new feedback
 - `GET` — fetch existing feedback (query: `projectSlug`, `pageUrl`)
 - `DELETE` — delete feedback by ID (query: `id`)

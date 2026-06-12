@@ -47,9 +47,7 @@ export function FeedbackLauncher({ projectSlug }: FeedbackLauncherProps) {
         if (res.ok) {
           const data = (await res.json()) as { feedback: FeedbackRow[] };
           setFullFeedback(data.feedback);
-          setPins(
-            data.feedback.map((f) => ({ id: f.id, x: f.x, y: f.y })),
-          );
+          setPins(data.feedback.map((f) => ({ id: f.id, x: f.x, y: f.y })));
         }
       } catch (error) {
         console.error("[fi-edback] Failed to fetch feedback:", error);

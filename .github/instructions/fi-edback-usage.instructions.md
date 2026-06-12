@@ -28,6 +28,7 @@ export const { GET, POST, DELETE } = createFeedbackRouteHandler();
 ```
 
 Provides three endpoints:
+
 - `POST` — submit new feedback
 - `GET` — fetch existing feedback for a page (query params: `projectSlug`, `pageUrl`)
 - `DELETE` — delete feedback by ID (query param: `id`)
@@ -89,15 +90,19 @@ For preview-only behaviour, scope them to the **Preview** environment only.
 ## Features
 
 ### Persistent Pins
+
 All feedback submitted for a page is displayed as pins. Pins are fetched on mount and remain visible to all users. Click any pin to see the full feedback.
 
 ### Delete Feedback
+
 A delete button (×) appears in the top-right of each feedback popup. Anyone can delete any feedback — no authentication required.
 
 ### IP Address Tracking
+
 IP addresses are automatically captured from `x-forwarded-for` or `x-real-ip` headers and stored in the database. This provides a fallback identifier when users don't enter a name.
 
 ### Internationalization
+
 Toggle between English and German using the language switcher (EN | DE) next to the Feedback button. All UI text updates instantly.
 
 ## Disable for production
@@ -120,6 +125,7 @@ Rows are separated by the `project_slug` column.
 Run `SQL_MIGRATION.sql` (in the fi-edback repo) once in the Neon console to create the table.
 
 **Schema includes**:
+
 - `id`, `project_slug`, `page_url`, `x`, `y`, `message`
 - `name`, `email` (optional user-provided fields)
 - `session_id` (anonymous session cookie for rate limiting)

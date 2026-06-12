@@ -41,7 +41,7 @@ export function FeedbackForm({
   const [status, setStatus] = useState<Status>("idle");
   const [errorText, setErrorText] = useState("");
   const messageRef = useRef<HTMLTextAreaElement>(null);
-  
+
   const t = getTranslations(language);
 
   useEffect(() => {

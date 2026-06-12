@@ -8,9 +8,12 @@ interface FeedbackOverlayProps {
   onPinPlaced: (x: number, y: number) => void;
 }
 
-export function FeedbackOverlay({ language, onPinPlaced }: FeedbackOverlayProps) {
+export function FeedbackOverlay({
+  language,
+  onPinPlaced,
+}: FeedbackOverlayProps) {
   const t = getTranslations(language);
-  
+
   function handleClick(e: React.MouseEvent<HTMLDivElement>) {
     // Use document-relative coordinates (viewport position + scroll offset) so
     // the pin is anchored to the content rather than the screen.
