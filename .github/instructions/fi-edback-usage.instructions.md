@@ -110,6 +110,7 @@ Mobile: Touch and drag with finger
 ### Mobile Support
 
 The feedback tool is fully mobile-friendly with:
+
 - Touch event support for dragging pins
 - Responsive UI that adapts to screen size
 - Optimized button sizes for touch targets
@@ -129,6 +130,7 @@ IP addresses are automatically captured from `x-forwarded-for` or `x-real-ip` he
 Switch between English, German, and Irish using the language selector next to the Feedback button. The active language is highlighted with bold text and a light background. All UI text updates instantly.
 
 Supported languages:
+
 - **EN** (English)
 - **DE** (Deutsch/German)
 - **GA** (Gaeilge/Irish)

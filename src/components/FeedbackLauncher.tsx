@@ -187,7 +187,7 @@ export function FeedbackLauncher({ projectSlug }: FeedbackLauncherProps) {
   );
 
   // Responsive values based on screen width
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
 
   return (
     <>
@@ -259,7 +259,7 @@ export function FeedbackLauncher({ projectSlug }: FeedbackLauncherProps) {
           >
             {t.instructionText}
           </div>
-          
+
           {/* Feedback button */}
           <button
             onClick={handleActivate}

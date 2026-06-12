@@ -116,7 +116,10 @@ export function FeedbackForm({
     ? 12
     : Math.min(viewportX + 14, window.innerWidth - formWidth - 12);
   const top = isMobile
-    ? Math.min(window.innerHeight - formHeight - 12, window.innerHeight / 2 - formHeight / 2)
+    ? Math.min(
+        window.innerHeight - formHeight - 12,
+        window.innerHeight / 2 - formHeight / 2,
+      )
     : Math.min(viewportY + 14, window.innerHeight - formHeight - 12);
 
   const inputStyle: React.CSSProperties = {

@@ -96,7 +96,10 @@ export function FeedbackPopup({
     ? 12
     : Math.min(viewportX + 14, window.innerWidth - popupWidth - 12);
   const top = isMobile
-    ? Math.min(window.innerHeight - popupMaxHeight - 12, window.innerHeight / 2 - popupMaxHeight / 2)
+    ? Math.min(
+        window.innerHeight - popupMaxHeight - 12,
+        window.innerHeight / 2 - popupMaxHeight / 2,
+      )
     : Math.min(viewportY + 14, window.innerHeight - popupMaxHeight - 12);
 
   return (

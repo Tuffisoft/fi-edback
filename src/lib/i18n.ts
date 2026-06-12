@@ -22,7 +22,8 @@ export const translations = {
   de: {
     feedbackButton: "Feedback",
     cancelButton: "Abbrechen",
-    instructionText: "Klicken Sie auf die Feedback-Schaltfläche, um einen Kommentar zu hinterlassen",
+    instructionText:
+      "Klicken Sie auf die Feedback-Schaltfläche, um einen Kommentar zu hinterlassen",
     messagePlaceholder: "Was möchten Sie uns mitteilen?",
     messageLabel: "Nachricht",
     nameLabel: "Name (optional)",
