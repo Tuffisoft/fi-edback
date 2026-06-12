@@ -1,20 +1,56 @@
+"use strict";
+var __create = Object.create;
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+// src/index.ts
+var src_exports = {};
+__export(src_exports, {
+  createFeedbackRouteHandler: () => createFeedbackRouteHandler
+});
+module.exports = __toCommonJS(src_exports);
+
 // src/lib/validation.ts
-import { z } from "zod";
+var import_zod = require("zod");
 function getFeedbackSchema() {
-  return z.object({
-    projectSlug: z.string().min(1).max(100),
-    pageUrl: z.string().url(),
-    x: z.number().finite(),
-    y: z.number().finite(),
-    message: z.string().min(1, "Message is required").max(2e3),
-    name: z.string().max(100).optional(),
-    email: z.string().max(200).refine((v) => v === "" || z.string().email().safeParse(v).success, {
+  return import_zod.z.object({
+    projectSlug: import_zod.z.string().min(1).max(100),
+    pageUrl: import_zod.z.string().url(),
+    x: import_zod.z.number().finite(),
+    y: import_zod.z.number().finite(),
+    message: import_zod.z.string().min(1, "Message is required").max(2e3),
+    name: import_zod.z.string().max(100).optional(),
+    email: import_zod.z.string().max(200).refine((v) => v === "" || import_zod.z.string().email().safeParse(v).success, {
       message: "Must be a valid email address"
     }).optional(),
-    sessionId: z.string().min(1).max(128),
-    userAgent: z.string().max(500).optional(),
+    sessionId: import_zod.z.string().min(1).max(128),
+    userAgent: import_zod.z.string().max(500).optional(),
     // Honeypot field — must be an empty string; bots fill it in
-    website: z.literal("")
+    website: import_zod.z.literal("")
   });
 }
 
@@ -229,6 +265,7 @@ function createFeedbackRouteHandler() {
   };
   return { GET, POST, DELETE };
 }
-export {
+// Annotate the CommonJS export names for ESM import in node:
+0 && (module.exports = {
   createFeedbackRouteHandler
-};
+});

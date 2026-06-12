@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { getOrCreateSessionId } from "../lib/session";
+import type { Language } from "../lib/i18n";
+import { getTranslations } from "../lib/i18n";
 
 interface Pin {
   id: string;
@@ -16,6 +18,7 @@ interface FeedbackFormProps {
   y: number;
   projectSlug: string;
   apiPath: string;
+  language: Language;
   onSubmitted: (pin: Pin) => void;
   onCancelled: () => void;
 }
@@ -27,6 +30,7 @@ export function FeedbackForm({
   y,
   projectSlug,
   apiPath,
+  language,
   onSubmitted,
   onCancelled,
 }: FeedbackFormProps) {
@@ -37,6 +41,8 @@ export function FeedbackForm({
   const [status, setStatus] = useState<Status>("idle");
   const [errorText, setErrorText] = useState("");
   const messageRef = useRef<HTMLTextAreaElement>(null);
+  
+  const t = getTranslations(language);
 
   useEffect(() => {
     messageRef.current?.focus();
@@ -153,10 +159,10 @@ export function FeedbackForm({
         >
           <div style={{ fontSize: "28px", marginBottom: "8px" }}>✓</div>
           <div style={{ fontWeight: "600", color: "#18181b" }}>
-            Feedback sent!
+            {t.successMessage}
           </div>
           <div style={{ color: "#71717a", fontSize: "13px", marginTop: "4px" }}>
-            Thanks for taking the time.
+            {t.successDescription}
           </div>
         </div>
       ) : (
@@ -169,7 +175,7 @@ export function FeedbackForm({
               fontSize: "14px",
             }}
           >
-            Leave feedback
+            {t.feedbackButton}
           </div>
 
           {/* Honeypot — visually hidden from real users */}
@@ -190,7 +196,7 @@ export function FeedbackForm({
               ref={messageRef}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Describe the issue or feedback…"
+              placeholder={t.messagePlaceholder}
               required
               rows={3}
               style={{ ...inputStyle, resize: "vertical" }}
@@ -202,7 +208,7 @@ export function FeedbackForm({
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Name (optional)"
+              placeholder={t.nameLabel}
               style={inputStyle}
             />
           </div>
@@ -212,7 +218,7 @@ export function FeedbackForm({
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email (optional)"
+              placeholder={t.emailLabel}
               style={inputStyle}
             />
           </div>
@@ -247,7 +253,7 @@ export function FeedbackForm({
                 fontFamily: "system-ui, sans-serif",
               }}
             >
-              Cancel
+              {t.cancelButton}
             </button>
             <button
               type="submit"
@@ -268,7 +274,7 @@ export function FeedbackForm({
                 fontFamily: "system-ui, sans-serif",
               }}
             >
-              {status === "submitting" ? "Sending…" : "Send"}
+              {status === "submitting" ? t.submitting : t.submitButton}
             </button>
           </div>
         </form>

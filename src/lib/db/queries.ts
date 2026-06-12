@@ -1,5 +1,5 @@
 import type { NeonQueryFn } from "./client";
-import type { FeedbackPayload } from "../types";
+import type { FeedbackPayload, FeedbackRow } from "../types";
 import { RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_SECONDS } from "../config";
 
 export async function insertFeedback(
@@ -16,7 +16,8 @@ export async function insertFeedback(
       name,
       email,
       session_id,
-      user_agent
+      user_agent,
+      ip_address
     ) VALUES (
       ${payload.projectSlug},
       ${payload.pageUrl},
@@ -26,9 +27,61 @@ export async function insertFeedback(
       ${payload.name ?? null},
       ${payload.email ?? null},
       ${payload.sessionId},
-      ${payload.userAgent ?? null}
+      ${payload.userAgent ?? null},
+      ${payload.ipAddress ?? null}
     )
   `;
+}
+
+/**
+ * Fetch all feedback for a specific project and page URL.
+ * Returns rows ordered by creation date (newest first).
+ */
+export async function getFeedbackForPage(
+  sql: NeonQueryFn,
+  projectSlug: string,
+  pageUrl: string,
+): Promise<FeedbackRow[]> {
+  const rows = await sql`
+    SELECT 
+      id,
+      project_slug as "projectSlug",
+      page_url as "pageUrl",
+      x,
+      y,
+      message,
+      name,
+      email,
+      session_id as "sessionId",
+      user_agent as "userAgent",
+      ip_address as "ipAddress",
+      created_at as "createdAt"
+    FROM fi_feedback
+    WHERE project_slug = ${projectSlug}
+      AND page_url = ${pageUrl}
+    ORDER BY created_at DESC
+  `;
+  
+  return rows.map(row => ({
+    ...row,
+    createdAt: new Date(row.createdAt as string),
+  })) as FeedbackRow[];
+}
+
+/**
+ * Delete a feedback entry by ID.
+ * Returns true if a row was deleted, false otherwise.
+ */
+export async function deleteFeedback(
+  sql: NeonQueryFn,
+  id: string,
+): Promise<boolean> {
+  const result = await sql`
+    DELETE FROM fi_feedback
+    WHERE id = ${id}
+  `;
+  
+  return result.count > 0;
 }
 
 /**

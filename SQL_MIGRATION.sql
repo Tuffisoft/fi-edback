@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS fi_feedback (
   email        TEXT,
   session_id   TEXT        NOT NULL,
   user_agent   TEXT,
+  ip_address   TEXT,
   created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
   CONSTRAINT fi_feedback_pkey PRIMARY KEY (id)
 );
@@ -27,3 +28,7 @@ CREATE INDEX IF NOT EXISTS fi_feedback_project_slug_idx
 -- Index used by the rate-limit check (session_id + created_at window)
 CREATE INDEX IF NOT EXISTS fi_feedback_session_rate_idx
   ON fi_feedback (session_id, created_at);
+
+-- Index for fetching feedback by page URL (for displaying existing pins)
+CREATE INDEX IF NOT EXISTS fi_feedback_page_url_idx
+  ON fi_feedback (project_slug, page_url, created_at DESC);

@@ -16,17 +16,19 @@ src/                    ← package source (compiled to dist/ by tsup)
     config.ts           ← API_PATH, SESSION_COOKIE_NAME, rate limit constants
     validation.ts       ← Zod schema (includes honeypot field)
     session.ts          ← client-side anonymous session cookie
+    i18n.ts             ← translations (EN/DE) and Language type
     db/
       client.ts         ← getNeonClient() — cached neon() instance
-      queries.ts        ← insertFeedback(), isRateLimited()
+      queries.ts        ← insertFeedback(), getFeedbackForPage(), deleteFeedback(), isRateLimited()
   server/
-    route-handler.ts    ← createFeedbackRouteHandler() factory
+    route-handler.ts    ← createFeedbackRouteHandler() factory (GET, POST, DELETE)
   components/
     FeedbackRoot.tsx    ← gate component (mounted check + env check)
-    FeedbackLauncher.tsx
+    FeedbackLauncher.tsx ← main orchestrator (language state, fetch pins, clickable pins)
     FeedbackOverlay.tsx
-    FeedbackPinLayer.tsx
-    FeedbackForm.tsx
+    FeedbackPinLayer.tsx ← renders clickable pins
+    FeedbackForm.tsx     ← submit new feedback
+    FeedbackPopup.tsx    ← view/delete existing feedback
 dev/                    ← Next.js 16 dev harness (not part of the package)
 dist/                   ← compiled output (committed to git)
 SQL_MIGRATION.sql       ← run once in Neon console to create fi_feedback table
@@ -42,6 +44,20 @@ SQL_MIGRATION.sql       ← run once in Neon console to create fi_feedback table
 - The honeypot field is named `website` — it must be an empty string (`z.literal('')`) in the Zod schema
 - Coordinates are document-relative (`clientX + scrollX`, `clientY + scrollY`) — not viewport-relative
 - `dist/` is committed to git so `npm i github:studiofi/fi-edback` works without a build step
+
+## Features
+
+### Persistent pins
+All feedback for a page is fetched via GET endpoint on mount and displayed as clickable pins. Clicking a pin shows a popup with the full message, author, and timestamp.
+
+### IP address tracking
+IP addresses are captured from `x-forwarded-for` or `x-real-ip` headers and stored in the database. This provides a fallback identifier when users don't enter a name.
+
+### Delete functionality
+Anyone can delete any feedback via the delete button in the popup. No authentication required. DELETE endpoint removes the row from the database.
+
+### Internationalization
+EN/DE language toggle next to the Feedback button. All UI strings are centralized in `src/lib/i18n.ts`. Language state is managed in `FeedbackLauncher` and passed down to all components.
 
 ## Build
 

@@ -24,8 +24,13 @@ npm i @neondatabase/serverless zod@~3.23.8
 
 ```ts
 import { createFeedbackRouteHandler } from "fi-edback";
-export const { POST } = createFeedbackRouteHandler();
+export const { GET, POST, DELETE } = createFeedbackRouteHandler();
 ```
+
+Provides three endpoints:
+- `POST` — submit new feedback
+- `GET` — fetch existing feedback for a page (query params: `projectSlug`, `pageUrl`)
+- `DELETE` — delete feedback by ID (query param: `id`)
 
 ### 2. Root layout — add `<FeedbackRoot />` inside `<body>`
 
@@ -75,6 +80,25 @@ For preview-only behaviour, scope them to the **Preview** environment only.
 - The form collects message (required), name and email (optional)
 - On submit, a `POST` request goes to `/api/fi-edback`
 - The route handler validates with Zod, checks rate limit, inserts into `fi_feedback` table
+- **Persistent pins**: All feedback is fetched on page load via `GET` endpoint
+- **Clickable pins**: Users can click any pin to view the message, author, and timestamp
+- **Delete**: Anyone can delete any feedback via the delete button (no authentication)
+- **IP tracking**: IP addresses are captured automatically from request headers
+- **i18n**: Language toggle (EN/DE) in bottom-right switches all UI text
+
+## Features
+
+### Persistent Pins
+All feedback submitted for a page is displayed as pins. Pins are fetched on mount and remain visible to all users. Click any pin to see the full feedback.
+
+### Delete Feedback
+A delete button (×) appears in the top-right of each feedback popup. Anyone can delete any feedback — no authentication required.
+
+### IP Address Tracking
+IP addresses are automatically captured from `x-forwarded-for` or `x-real-ip` headers and stored in the database. This provides a fallback identifier when users don't enter a name.
+
+### Internationalization
+Toggle between English and German using the language switcher (EN | DE) next to the Feedback button. All UI text updates instantly.
 
 ## Disable for production
 
@@ -94,6 +118,13 @@ npm i github:studiofi/fi-edback#<commit-sha>
 All projects write to a shared `fi_feedback` table in one Neon database.
 Rows are separated by the `project_slug` column.
 Run `SQL_MIGRATION.sql` (in the fi-edback repo) once in the Neon console to create the table.
+
+**Schema includes**:
+- `id`, `project_slug`, `page_url`, `x`, `y`, `message`
+- `name`, `email` (optional user-provided fields)
+- `session_id` (anonymous session cookie for rate limiting)
+- `user_agent`, `ip_address` (auto-captured from request headers)
+- `created_at` (timestamp)
 
 ## Troubleshooting
 

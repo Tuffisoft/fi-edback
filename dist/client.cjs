@@ -1,10 +1,35 @@
+"use strict";
 "use client";
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+// src/client.ts
+var client_exports = {};
+__export(client_exports, {
+  FeedbackRoot: () => FeedbackRoot
+});
+module.exports = __toCommonJS(client_exports);
 
 // src/components/FeedbackRoot.tsx
-import { useState as useState4, useEffect as useEffect3 } from "react";
+var import_react4 = require("react");
 
 // src/components/FeedbackLauncher.tsx
-import { useState as useState3, useEffect as useEffect2 } from "react";
+var import_react3 = require("react");
 
 // src/lib/i18n.ts
 var translations = {
@@ -50,7 +75,7 @@ function getTranslations(lang) {
 }
 
 // src/components/FeedbackOverlay.tsx
-import { jsx } from "react/jsx-runtime";
+var import_jsx_runtime = require("react/jsx-runtime");
 function FeedbackOverlay({ language, onPinPlaced }) {
   const t = getTranslations(language);
   function handleClick(e) {
@@ -58,7 +83,7 @@ function FeedbackOverlay({ language, onPinPlaced }) {
     const y = e.clientY + window.scrollY;
     onPinPlaced(x, y);
   }
-  return /* @__PURE__ */ jsx(
+  return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
     "div",
     {
       onClick: handleClick,
@@ -80,14 +105,14 @@ function FeedbackOverlay({ language, onPinPlaced }) {
 }
 
 // src/components/FeedbackPinLayer.tsx
-import { Fragment, jsx as jsx2 } from "react/jsx-runtime";
+var import_jsx_runtime2 = require("react/jsx-runtime");
 function FeedbackPinLayer({
   pins,
   onPinClick,
   title = "Feedback submitted"
 }) {
   if (pins.length === 0) return null;
-  return /* @__PURE__ */ jsx2(Fragment, { children: pins.map((pin) => /* @__PURE__ */ jsx2(
+  return /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_jsx_runtime2.Fragment, { children: pins.map((pin) => /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
     "div",
     {
       title,
@@ -130,7 +155,7 @@ function FeedbackPinLayer({
 }
 
 // src/components/FeedbackForm.tsx
-import { useState, useEffect, useRef } from "react";
+var import_react = require("react");
 
 // src/lib/config.ts
 var API_PATH = "/api/fi-edback";
@@ -160,7 +185,7 @@ function getOrCreateSessionId() {
 }
 
 // src/components/FeedbackForm.tsx
-import { jsx as jsx3, jsxs } from "react/jsx-runtime";
+var import_jsx_runtime3 = require("react/jsx-runtime");
 function FeedbackForm({
   x,
   y,
@@ -170,15 +195,15 @@ function FeedbackForm({
   onSubmitted,
   onCancelled
 }) {
-  const [message, setMessage] = useState("");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [website, setWebsite] = useState("");
-  const [status, setStatus] = useState("idle");
-  const [errorText, setErrorText] = useState("");
-  const messageRef = useRef(null);
+  const [message, setMessage] = (0, import_react.useState)("");
+  const [name, setName] = (0, import_react.useState)("");
+  const [email, setEmail] = (0, import_react.useState)("");
+  const [website, setWebsite] = (0, import_react.useState)("");
+  const [status, setStatus] = (0, import_react.useState)("idle");
+  const [errorText, setErrorText] = (0, import_react.useState)("");
+  const messageRef = (0, import_react.useRef)(null);
   const t = getTranslations(language);
-  useEffect(() => {
+  (0, import_react.useEffect)(() => {
     messageRef.current?.focus();
   }, []);
   async function handleSubmit(e) {
@@ -250,7 +275,7 @@ function FeedbackForm({
     color: "#18181b",
     backgroundColor: "#fff"
   };
-  return /* @__PURE__ */ jsx3(
+  return /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
     "div",
     {
       role: "dialog",
@@ -268,18 +293,18 @@ function FeedbackForm({
         fontFamily: "system-ui, sans-serif",
         fontSize: "14px"
       },
-      children: status === "success" ? /* @__PURE__ */ jsxs(
+      children: status === "success" ? /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)(
         "div",
         {
           style: { textAlign: "center", padding: "20px 0", color: "#16a34a" },
           children: [
-            /* @__PURE__ */ jsx3("div", { style: { fontSize: "28px", marginBottom: "8px" }, children: "\u2713" }),
-            /* @__PURE__ */ jsx3("div", { style: { fontWeight: "600", color: "#18181b" }, children: t.successMessage }),
-            /* @__PURE__ */ jsx3("div", { style: { color: "#71717a", fontSize: "13px", marginTop: "4px" }, children: t.successDescription })
+            /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { style: { fontSize: "28px", marginBottom: "8px" }, children: "\u2713" }),
+            /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { style: { fontWeight: "600", color: "#18181b" }, children: t.successMessage }),
+            /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { style: { color: "#71717a", fontSize: "13px", marginTop: "4px" }, children: t.successDescription })
           ]
         }
-      ) : /* @__PURE__ */ jsxs("form", { onSubmit: handleSubmit, children: [
-        /* @__PURE__ */ jsx3(
+      ) : /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("form", { onSubmit: handleSubmit, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
           "div",
           {
             style: {
@@ -291,9 +316,9 @@ function FeedbackForm({
             children: t.feedbackButton
           }
         ),
-        /* @__PURE__ */ jsxs("div", { style: { display: "none" }, "aria-hidden": "true", children: [
-          /* @__PURE__ */ jsx3("label", { htmlFor: "fi-website", children: "Website" }),
-          /* @__PURE__ */ jsx3(
+        /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { style: { display: "none" }, "aria-hidden": "true", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("label", { htmlFor: "fi-website", children: "Website" }),
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
             "input",
             {
               id: "fi-website",
@@ -305,7 +330,7 @@ function FeedbackForm({
             }
           )
         ] }),
-        /* @__PURE__ */ jsx3("div", { style: { marginBottom: "10px" }, children: /* @__PURE__ */ jsx3(
+        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { style: { marginBottom: "10px" }, children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
           "textarea",
           {
             ref: messageRef,
@@ -317,7 +342,7 @@ function FeedbackForm({
             style: { ...inputStyle, resize: "vertical" }
           }
         ) }),
-        /* @__PURE__ */ jsx3("div", { style: { marginBottom: "10px" }, children: /* @__PURE__ */ jsx3(
+        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { style: { marginBottom: "10px" }, children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
           "input",
           {
             type: "text",
@@ -327,7 +352,7 @@ function FeedbackForm({
             style: inputStyle
           }
         ) }),
-        /* @__PURE__ */ jsx3("div", { style: { marginBottom: "14px" }, children: /* @__PURE__ */ jsx3(
+        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { style: { marginBottom: "14px" }, children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
           "input",
           {
             type: "email",
@@ -337,7 +362,7 @@ function FeedbackForm({
             style: inputStyle
           }
         ) }),
-        errorText && /* @__PURE__ */ jsx3(
+        errorText && /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
           "div",
           {
             style: {
@@ -349,12 +374,12 @@ function FeedbackForm({
             children: errorText
           }
         ),
-        /* @__PURE__ */ jsxs(
+        /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)(
           "div",
           {
             style: { display: "flex", gap: "8px", justifyContent: "flex-end" },
             children: [
-              /* @__PURE__ */ jsx3(
+              /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
                 "button",
                 {
                   type: "button",
@@ -372,7 +397,7 @@ function FeedbackForm({
                   children: t.cancelButton
                 }
               ),
-              /* @__PURE__ */ jsx3(
+              /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
                 "button",
                 {
                   type: "submit",
@@ -401,8 +426,8 @@ function FeedbackForm({
 }
 
 // src/components/FeedbackPopup.tsx
-import { useState as useState2 } from "react";
-import { Fragment as Fragment2, jsx as jsx4, jsxs as jsxs2 } from "react/jsx-runtime";
+var import_react2 = require("react");
+var import_jsx_runtime4 = require("react/jsx-runtime");
 function FeedbackPopup({
   feedback,
   apiPath,
@@ -410,7 +435,7 @@ function FeedbackPopup({
   onDeleted,
   onClose
 }) {
-  const [isDeleting, setIsDeleting] = useState2(false);
+  const [isDeleting, setIsDeleting] = (0, import_react2.useState)(false);
   const t = getTranslations(language);
   async function handleDelete() {
     if (isDeleting) return;
@@ -437,8 +462,8 @@ function FeedbackPopup({
   const popupMaxHeight = 400;
   const left = Math.min(viewportX + 14, window.innerWidth - popupWidth - 12);
   const top = Math.min(viewportY + 14, window.innerHeight - popupMaxHeight - 12);
-  return /* @__PURE__ */ jsxs2(Fragment2, { children: [
-    /* @__PURE__ */ jsx4(
+  return /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)(import_jsx_runtime4.Fragment, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
       "div",
       {
         onClick: onClose,
@@ -450,7 +475,7 @@ function FeedbackPopup({
         }
       }
     ),
-    /* @__PURE__ */ jsxs2(
+    /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)(
       "div",
       {
         role: "dialog",
@@ -471,7 +496,7 @@ function FeedbackPopup({
           overflow: "auto"
         },
         children: [
-          /* @__PURE__ */ jsx4(
+          /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
             "button",
             {
               onClick: onClose,
@@ -493,7 +518,7 @@ function FeedbackPopup({
               children: "\xD7"
             }
           ),
-          /* @__PURE__ */ jsxs2(
+          /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)(
             "div",
             {
               style: {
@@ -503,12 +528,12 @@ function FeedbackPopup({
                 paddingRight: "24px"
               },
               children: [
-                /* @__PURE__ */ jsxs2("div", { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { children: [
                   t.by,
                   " ",
-                  /* @__PURE__ */ jsx4("strong", { style: { color: "#18181b" }, children: feedback.name || t.anonymous })
+                  /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("strong", { style: { color: "#18181b" }, children: feedback.name || t.anonymous })
                 ] }),
-                /* @__PURE__ */ jsx4("div", { style: { marginTop: "4px" }, children: new Date(feedback.createdAt).toLocaleString(
+                /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { style: { marginTop: "4px" }, children: new Date(feedback.createdAt).toLocaleString(
                   language === "de" ? "de-DE" : "en-US",
                   {
                     dateStyle: "medium",
@@ -518,7 +543,7 @@ function FeedbackPopup({
               ]
             }
           ),
-          /* @__PURE__ */ jsx4(
+          /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
             "div",
             {
               style: {
@@ -531,7 +556,7 @@ function FeedbackPopup({
               children: feedback.message
             }
           ),
-          /* @__PURE__ */ jsx4(
+          /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
             "button",
             {
               onClick: handleDelete,
@@ -559,21 +584,21 @@ function FeedbackPopup({
 }
 
 // src/components/FeedbackLauncher.tsx
-import { Fragment as Fragment3, jsx as jsx5, jsxs as jsxs3 } from "react/jsx-runtime";
+var import_jsx_runtime5 = require("react/jsx-runtime");
 function FeedbackLauncher({ projectSlug }) {
-  const [language, setLanguage] = useState3("en");
-  const [isActive, setIsActive] = useState3(false);
-  const [pins, setPins] = useState3([]);
-  const [fullFeedback, setFullFeedback] = useState3([]);
-  const [pendingPin, setPendingPin] = useState3(
+  const [language, setLanguage] = (0, import_react3.useState)("en");
+  const [isActive, setIsActive] = (0, import_react3.useState)(false);
+  const [pins, setPins] = (0, import_react3.useState)([]);
+  const [fullFeedback, setFullFeedback] = (0, import_react3.useState)([]);
+  const [pendingPin, setPendingPin] = (0, import_react3.useState)(
     null
   );
-  const [selectedFeedbackId, setSelectedFeedbackId] = useState3(
+  const [selectedFeedbackId, setSelectedFeedbackId] = (0, import_react3.useState)(
     null
   );
-  const [isLoading, setIsLoading] = useState3(true);
+  const [isLoading, setIsLoading] = (0, import_react3.useState)(true);
   const t = getTranslations(language);
-  useEffect2(() => {
+  (0, import_react3.useEffect)(() => {
     async function fetchFeedback() {
       try {
         const params = new URLSearchParams({
@@ -632,8 +657,8 @@ function FeedbackLauncher({ projectSlug }) {
   const selectedFeedback = fullFeedback.find(
     (f) => f.id === selectedFeedbackId
   );
-  return /* @__PURE__ */ jsxs3(Fragment3, { children: [
-    !isActive && !pendingPin && /* @__PURE__ */ jsxs3(
+  return /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(import_jsx_runtime5.Fragment, { children: [
+    !isActive && !pendingPin && /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(
       "button",
       {
         onClick: toggleLanguage,
@@ -661,7 +686,7 @@ function FeedbackLauncher({ projectSlug }) {
         ]
       }
     ),
-    !isActive && !pendingPin && /* @__PURE__ */ jsx5(
+    !isActive && !pendingPin && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
       "button",
       {
         onClick: handleActivate,
@@ -686,7 +711,7 @@ function FeedbackLauncher({ projectSlug }) {
         children: t.feedbackButton
       }
     ),
-    isActive && /* @__PURE__ */ jsx5(
+    isActive && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
       "button",
       {
         onClick: handleDeactivate,
@@ -710,8 +735,8 @@ function FeedbackLauncher({ projectSlug }) {
         children: t.cancelButton
       }
     ),
-    isActive && /* @__PURE__ */ jsx5(FeedbackOverlay, { language, onPinPlaced: handlePinPlaced }),
-    /* @__PURE__ */ jsx5(
+    isActive && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(FeedbackOverlay, { language, onPinPlaced: handlePinPlaced }),
+    /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
       FeedbackPinLayer,
       {
         pins,
@@ -719,7 +744,7 @@ function FeedbackLauncher({ projectSlug }) {
         title: t.feedbackSubmitted
       }
     ),
-    pendingPin && /* @__PURE__ */ jsx5(
+    pendingPin && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
       FeedbackForm,
       {
         x: pendingPin.x,
@@ -731,7 +756,7 @@ function FeedbackLauncher({ projectSlug }) {
         onCancelled: handleFormCancelled
       }
     ),
-    selectedFeedback && /* @__PURE__ */ jsx5(
+    selectedFeedback && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
       FeedbackPopup,
       {
         feedback: selectedFeedback,
@@ -745,10 +770,10 @@ function FeedbackLauncher({ projectSlug }) {
 }
 
 // src/components/FeedbackRoot.tsx
-import { jsx as jsx6 } from "react/jsx-runtime";
+var import_jsx_runtime6 = require("react/jsx-runtime");
 function FeedbackRoot() {
-  const [mounted, setMounted] = useState4(false);
-  useEffect3(() => {
+  const [mounted, setMounted] = (0, import_react4.useState)(false);
+  (0, import_react4.useEffect)(() => {
     setMounted(true);
   }, []);
   if (!mounted) return null;
@@ -756,8 +781,9 @@ function FeedbackRoot() {
   const projectSlug = process.env.NEXT_PUBLIC_FEEDBACK_PROJECT_SLUG;
   if (!projectSlug) return null;
   if (window.innerWidth < 768) return null;
-  return /* @__PURE__ */ jsx6(FeedbackLauncher, { projectSlug });
+  return /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(FeedbackLauncher, { projectSlug });
 }
-export {
+// Annotate the CommonJS export names for ESM import in node:
+0 && (module.exports = {
   FeedbackRoot
-};
+});

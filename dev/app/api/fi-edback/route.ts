@@ -1,3 +1,3 @@
 import { createFeedbackRouteHandler } from "fi-edback";
 
-export const { POST } = createFeedbackRouteHandler();
+export const { GET, POST, DELETE } = createFeedbackRouteHandler();

@@ -10,6 +10,7 @@ export interface FeedbackPayload {
   email?: string;
   sessionId: string;
   userAgent?: string;
+  ipAddress?: string;
 }
 
 export interface FeedbackConfig {
