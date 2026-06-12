@@ -2,8 +2,19 @@
   "name": "fi-edback",
   "version": "0.2.0",
   "description": "Reusable visual feedback widget for Next.js Vercel preview deployments",
+  "author": "Studio Fi<fi@studio-fi.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/studiofi/fi-edback.git"
+  },
+  "keywords": [
+    "nextjs",
+    "feedback",
+    "preview",
+    "widget",
+    "visual-feedback"
+  ],
   "license": "MIT",
-  "private": true,
   "files": [
     "dist"
   ],

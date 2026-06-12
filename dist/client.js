@@ -333,7 +333,10 @@ function FeedbackForm({
   const formWidth = isMobile ? Math.min(window.innerWidth - 24, 300) : 300;
   const formHeight = 320;
   const left = isMobile ? 12 : Math.min(viewportX + 14, window.innerWidth - formWidth - 12);
-  const top = isMobile ? Math.min(window.innerHeight - formHeight - 12, window.innerHeight / 2 - formHeight / 2) : Math.min(viewportY + 14, window.innerHeight - formHeight - 12);
+  const top = isMobile ? Math.min(
+    window.innerHeight - formHeight - 12,
+    window.innerHeight / 2 - formHeight / 2
+  ) : Math.min(viewportY + 14, window.innerHeight - formHeight - 12);
   const inputStyle = {
     width: "100%",
     border: "1px solid #e4e4e7",
@@ -560,7 +563,10 @@ function FeedbackPopup({
   const popupWidth = isMobile ? Math.min(window.innerWidth - 24, 300) : 300;
   const popupMaxHeight = 400;
   const left = isMobile ? 12 : Math.min(viewportX + 14, window.innerWidth - popupWidth - 12);
-  const top = isMobile ? Math.min(window.innerHeight - popupMaxHeight - 12, window.innerHeight / 2 - popupMaxHeight / 2) : Math.min(viewportY + 14, window.innerHeight - popupMaxHeight - 12);
+  const top = isMobile ? Math.min(
+    window.innerHeight - popupMaxHeight - 12,
+    window.innerHeight / 2 - popupMaxHeight / 2
+  ) : Math.min(viewportY + 14, window.innerHeight - popupMaxHeight - 12);
   return /* @__PURE__ */ jsxs2(Fragment2, { children: [
     /* @__PURE__ */ jsx4(
       "div",
