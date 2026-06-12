@@ -5,6 +5,8 @@ import {
   isRateLimited,
   getFeedbackForPage,
   deleteFeedback,
+  toggleReaction,
+  updateFeedbackPosition,
 } from "../lib/db/queries";
 
 type RouteHandler = (request: Request) => Promise<Response>;
@@ -35,6 +37,7 @@ function getIpAddress(request: Request): string | undefined {
 export function createFeedbackRouteHandler(): {
   GET: RouteHandler;
   POST: RouteHandler;
+  PATCH: RouteHandler;
   DELETE: RouteHandler;
 } {
   const GET: RouteHandler = async (request) => {
@@ -47,6 +50,7 @@ export function createFeedbackRouteHandler(): {
     const url = new URL(request.url);
     const projectSlug = url.searchParams.get("projectSlug");
     const pageUrl = url.searchParams.get("pageUrl");
+    const sessionId = url.searchParams.get("sessionId") || "";
 
     if (!projectSlug || !pageUrl) {
       return Response.json(
@@ -58,7 +62,12 @@ export function createFeedbackRouteHandler(): {
     const sql = await getNeonClient(databaseUrl);
 
     try {
-      const feedback = await getFeedbackForPage(sql, projectSlug, pageUrl);
+      const feedback = await getFeedbackForPage(
+        sql,
+        projectSlug,
+        pageUrl,
+        sessionId,
+      );
       return Response.json({ feedback });
     } catch (error) {
       console.error("[fi-edback] Database error:", error);
@@ -111,7 +120,7 @@ export function createFeedbackRouteHandler(): {
         );
       }
 
-      await insertFeedback(sql, {
+      const feedback = await insertFeedback(sql, {
         projectSlug: parsed.data.projectSlug,
         pageUrl: parsed.data.pageUrl,
         x: parsed.data.x,
@@ -124,11 +133,77 @@ export function createFeedbackRouteHandler(): {
         ipAddress: getIpAddress(request),
       });
 
-      return Response.json({ ok: true });
+      return Response.json({ feedback });
     } catch (error) {
       console.error("[fi-edback] Database error:", error);
       return Response.json(
         { error: "Failed to save feedback" },
+        { status: 500 },
+      );
+    }
+  };
+
+  const PATCH: RouteHandler = async (request) => {
+    const databaseUrl = process.env.DATABASE_URL;
+    if (!databaseUrl) {
+      console.error("[fi-edback] DATABASE_URL is not set");
+      return Response.json({ error: "Server misconfigured" }, { status: 500 });
+    }
+
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
+
+    const bodyObj = body as Record<string, unknown>;
+    const sql = await getNeonClient(databaseUrl);
+
+    // Handle position update (has x and y fields)
+    if (typeof bodyObj.x === "number" && typeof bodyObj.y === "number") {
+      const { feedbackId, x, y } = bodyObj as {
+        feedbackId: string;
+        x: number;
+        y: number;
+      };
+
+      if (!feedbackId) {
+        return Response.json({ error: "Missing feedbackId" }, { status: 400 });
+      }
+
+      try {
+        await updateFeedbackPosition(sql, feedbackId, x, y);
+        return Response.json({ ok: true });
+      } catch (error) {
+        console.error("[fi-edback] Database error:", error);
+        return Response.json(
+          { error: "Failed to update position" },
+          { status: 500 },
+        );
+      }
+    }
+
+    // Handle reaction toggle (has reaction field)
+    const { feedbackId, reaction, sessionId } = bodyObj as Record<
+      string,
+      string
+    >;
+
+    if (!feedbackId || !reaction || !sessionId) {
+      return Response.json(
+        { error: "Missing feedbackId, reaction, or sessionId" },
+        { status: 400 },
+      );
+    }
+
+    try {
+      const added = await toggleReaction(sql, feedbackId, reaction, sessionId);
+      return Response.json({ added });
+    } catch (error) {
+      console.error("[fi-edback] Database error:", error);
+      return Response.json(
+        { error: "Failed to toggle reaction" },
         { status: 500 },
       );
     }
@@ -154,10 +229,7 @@ export function createFeedbackRouteHandler(): {
     const sql = await getNeonClient(databaseUrl);
 
     try {
-      const deleted = await deleteFeedback(sql, id);
-      if (!deleted) {
-        return Response.json({ error: "Feedback not found" }, { status: 404 });
-      }
+      await deleteFeedback(sql, id);
       return Response.json({ ok: true });
     } catch (error) {
       console.error("[fi-edback] Database error:", error);
@@ -168,5 +240,5 @@ export function createFeedbackRouteHandler(): {
     }
   };
 
-  return { GET, POST, DELETE };
+  return { GET, POST, PATCH, DELETE };
 }

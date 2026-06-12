@@ -32,3 +32,22 @@ CREATE INDEX IF NOT EXISTS fi_feedback_session_rate_idx
 -- Index for fetching feedback by page URL (for displaying existing pins)
 CREATE INDEX IF NOT EXISTS fi_feedback_page_url_idx
   ON fi_feedback (project_slug, page_url, created_at DESC);
+
+-- Reactions table: allows users to react to feedback with emojis or predefined types
+CREATE TABLE IF NOT EXISTS fi_feedback_reactions (
+  id           TEXT        NOT NULL DEFAULT gen_random_uuid()::text,
+  feedback_id  TEXT        NOT NULL,
+  -- Reaction type: emoji (👍, ✅, ❤️) or predefined text (done, agree, important)
+  reaction     TEXT        NOT NULL,
+  session_id   TEXT        NOT NULL,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT fi_feedback_reactions_pkey PRIMARY KEY (id),
+  CONSTRAINT fi_feedback_reactions_feedback_fk FOREIGN KEY (feedback_id)
+    REFERENCES fi_feedback (id) ON DELETE CASCADE,
+  -- Prevent duplicate reactions from the same session
+  CONSTRAINT fi_feedback_reactions_unique UNIQUE (feedback_id, reaction, session_id)
+);
+
+-- Index for fetching reactions by feedback ID
+CREATE INDEX IF NOT EXISTS fi_feedback_reactions_feedback_idx
+  ON fi_feedback_reactions (feedback_id);

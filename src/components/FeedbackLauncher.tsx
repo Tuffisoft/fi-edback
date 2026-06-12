@@ -6,6 +6,7 @@ import { FeedbackPinLayer } from "./FeedbackPinLayer";
 import { FeedbackForm } from "./FeedbackForm";
 import { FeedbackPopup } from "./FeedbackPopup";
 import { API_PATH } from "../lib/config";
+import { getOrCreateSessionId } from "../lib/session";
 import type { FeedbackRow } from "../lib/types";
 import type { Language } from "../lib/i18n";
 import { getTranslations } from "../lib/i18n";
@@ -39,9 +40,11 @@ export function FeedbackLauncher({ projectSlug }: FeedbackLauncherProps) {
   useEffect(() => {
     async function fetchFeedback() {
       try {
+        const sessionId = getOrCreateSessionId();
         const params = new URLSearchParams({
           projectSlug,
           pageUrl: window.location.href,
+          sessionId,
         });
         const res = await fetch(`${API_PATH}?${params}`);
         if (res.ok) {
@@ -73,11 +76,13 @@ export function FeedbackLauncher({ projectSlug }: FeedbackLauncherProps) {
     setPendingPin({ x, y });
   }
 
-  function handleFormSubmitted(pin: Pin) {
-    setPins((prev) => [...prev, pin]);
+  function handleFormSubmitted(feedback: FeedbackRow) {
+    setPins((prev) => [
+      ...prev,
+      { id: feedback.id, x: feedback.x, y: feedback.y },
+    ]);
+    setFullFeedback((prev) => [...prev, feedback]);
     setPendingPin(null);
-    // Optionally refetch to get the full feedback data
-    // For now, we just add the pin visually
   }
 
   function handleFormCancelled() {
@@ -98,67 +103,184 @@ export function FeedbackLauncher({ projectSlug }: FeedbackLauncherProps) {
     setSelectedFeedbackId(null);
   }
 
+  function handleReactionToggled(
+    feedbackId: string,
+    reaction: string,
+    added: boolean,
+  ) {
+    setFullFeedback((prev) =>
+      prev.map((f) => {
+        if (f.id !== feedbackId) return f;
+
+        const reactions = f.reactions || [];
+        const existingIndex = reactions.findIndex(
+          (r) => r.reaction === reaction,
+        );
+
+        if (existingIndex >= 0) {
+          // Update existing reaction
+          const updated = [...reactions];
+          if (added) {
+            updated[existingIndex] = {
+              ...updated[existingIndex],
+              count: updated[existingIndex].count + 1,
+              hasReacted: true,
+            };
+          } else {
+            const newCount = updated[existingIndex].count - 1;
+            if (newCount === 0) {
+              updated.splice(existingIndex, 1);
+            } else {
+              updated[existingIndex] = {
+                ...updated[existingIndex],
+                count: newCount,
+                hasReacted: false,
+              };
+            }
+          }
+          return { ...f, reactions: updated };
+        } else {
+          // Add new reaction
+          return {
+            ...f,
+            reactions: [...reactions, { reaction, count: 1, hasReacted: true }],
+          };
+        }
+      }),
+    );
+  }
+
+  async function handlePinMoved(id: string, x: number, y: number) {
+    // Optimistically update local state
+    setPins((prev) => prev.map((p) => (p.id === id ? { ...p, x, y } : p)));
+    setFullFeedback((prev) =>
+      prev.map((f) => (f.id === id ? { ...f, x, y } : f)),
+    );
+
+    // Save to database
+    try {
+      const res = await fetch(API_PATH, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ feedbackId: id, x, y }),
+      });
+
+      if (!res.ok) {
+        console.error("[fi-edback] Failed to update pin position");
+        // Could revert optimistic update here if needed
+      }
+    } catch (error) {
+      console.error("[fi-edback] Failed to update pin position:", error);
+    }
+  }
+
   function toggleLanguage() {
-    setLanguage((prev) => (prev === "en" ? "de" : "en"));
+    setLanguage((prev) => {
+      if (prev === "en") return "de";
+      if (prev === "de") return "ga";
+      return "en";
+    });
   }
 
   const selectedFeedback = fullFeedback.find(
     (f) => f.id === selectedFeedbackId,
   );
 
+  // Responsive values based on screen width
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+
   return (
     <>
       {/* Language toggle */}
       {!isActive && !pendingPin && (
-        <button
-          onClick={toggleLanguage}
-          aria-label="Switch language"
+        <div
           style={{
             position: "fixed",
-            bottom: "24px",
-            right: "140px",
+            bottom: isMobile ? "90px" : "24px",
+            right: isMobile ? "12px" : "140px",
             zIndex: 9998,
+            display: "flex",
+            gap: "4px",
             backgroundColor: "#fff",
-            color: "#18181b",
             border: "1px solid #e4e4e7",
             borderRadius: "6px",
-            padding: "6px 10px",
-            fontSize: "12px",
-            fontWeight: "500",
-            cursor: "pointer",
+            padding: "4px",
             boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
             fontFamily: "system-ui, sans-serif",
           }}
         >
-          {language === "en" ? "EN" : "DE"} | {language === "en" ? "DE" : "EN"}
-        </button>
+          {(["en", "de", "ga"] as const).map((lang) => (
+            <button
+              key={lang}
+              onClick={() => setLanguage(lang)}
+              aria-label={`Switch to ${lang.toUpperCase()}`}
+              style={{
+                padding: isMobile ? "6px 10px" : "4px 8px",
+                fontSize: isMobile ? "13px" : "12px",
+                fontWeight: language === lang ? "700" : "500",
+                color: language === lang ? "#18181b" : "#71717a",
+                backgroundColor: language === lang ? "#f4f4f5" : "transparent",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+              }}
+            >
+              {lang.toUpperCase()}
+            </button>
+          ))}
+        </div>
       )}
 
       {/* Feedback button */}
       {!isActive && !pendingPin && (
-        <button
-          onClick={handleActivate}
-          aria-label="Open feedback tool"
+        <div
           style={{
             position: "fixed",
-            bottom: "24px",
-            right: "24px",
+            bottom: isMobile ? "12px" : "24px",
+            right: isMobile ? "12px" : "24px",
             zIndex: 9998,
-            backgroundColor: "#18181b",
-            color: "#fff",
-            border: "none",
-            borderRadius: "9999px",
-            padding: "10px 18px",
-            fontSize: "14px",
-            fontWeight: "500",
-            cursor: "pointer",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-            fontFamily: "system-ui, sans-serif",
-            letterSpacing: "0.01em",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-end",
+            gap: "8px",
           }}
         >
-          {t.feedbackButton}
-        </button>
+          {/* Instruction text */}
+          <div
+            style={{
+              fontSize: isMobile ? "11px" : "12px",
+              color: "#71717a",
+              fontFamily: "system-ui, sans-serif",
+              textAlign: "right",
+              maxWidth: isMobile ? "160px" : "200px",
+              lineHeight: "1.4",
+            }}
+          >
+            {t.instructionText}
+          </div>
+          
+          {/* Feedback button */}
+          <button
+            onClick={handleActivate}
+            aria-label="Open feedback tool"
+            style={{
+              backgroundColor: "#18181b",
+              color: "#fff",
+              border: "none",
+              borderRadius: "9999px",
+              padding: isMobile ? "12px 20px" : "10px 18px",
+              fontSize: isMobile ? "15px" : "14px",
+              fontWeight: "500",
+              cursor: "pointer",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+              fontFamily: "system-ui, sans-serif",
+              letterSpacing: "0.01em",
+            }}
+          >
+            {t.feedbackButton}
+          </button>
+        </div>
       )}
 
       {/* Cancel button */}
@@ -168,15 +290,15 @@ export function FeedbackLauncher({ projectSlug }: FeedbackLauncherProps) {
           aria-label="Cancel feedback"
           style={{
             position: "fixed",
-            bottom: "24px",
-            right: "24px",
+            bottom: isMobile ? "12px" : "24px",
+            right: isMobile ? "12px" : "24px",
             zIndex: 9999,
             backgroundColor: "#ef4444",
             color: "#fff",
             border: "none",
             borderRadius: "9999px",
-            padding: "10px 18px",
-            fontSize: "14px",
+            padding: isMobile ? "12px 20px" : "10px 18px",
+            fontSize: isMobile ? "15px" : "14px",
             fontWeight: "500",
             cursor: "pointer",
             boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
@@ -196,6 +318,7 @@ export function FeedbackLauncher({ projectSlug }: FeedbackLauncherProps) {
       <FeedbackPinLayer
         pins={pins}
         onPinClick={handlePinClick}
+        onPinMoved={handlePinMoved}
         title={t.feedbackSubmitted}
       />
 
@@ -219,6 +342,7 @@ export function FeedbackLauncher({ projectSlug }: FeedbackLauncherProps) {
           apiPath={API_PATH}
           language={language}
           onDeleted={handleFeedbackDeleted}
+          onReactionToggled={handleReactionToggled}
           onClose={handlePopupClose}
         />
       )}

@@ -24,13 +24,14 @@ npm i @neondatabase/serverless zod@~3.23.8
 
 ```ts
 import { createFeedbackRouteHandler } from "fi-edback";
-export const { GET, POST, DELETE } = createFeedbackRouteHandler();
+export const { GET, POST, PATCH, DELETE } = createFeedbackRouteHandler();
 ```
 
-Provides three endpoints:
+Provides four endpoints:
 
 - `POST` — submit new feedback
-- `GET` — fetch existing feedback for a page (query params: `projectSlug`, `pageUrl`)
+- `GET` — fetch existing feedback for a page (query params: `projectSlug`, `pageUrl`, `sessionId`)
+- `PATCH` — toggle a reaction on feedback (body: `feedbackId`, `reaction`, `sessionId`) OR update pin position (body: `feedbackId`, `x`, `y`)
 - `DELETE` — delete feedback by ID (query param: `id`)
 
 ### 2. Root layout — add `<FeedbackRoot />` inside `<body>`
@@ -83,15 +84,37 @@ For preview-only behaviour, scope them to the **Preview** environment only.
 - The route handler validates with Zod, checks rate limit, inserts into `fi_feedback` table
 - **Persistent pins**: All feedback is fetched on page load via `GET` endpoint
 - **Clickable pins**: Users can click any pin to view the message, author, and timestamp
+- **Draggable pins**: Pins can be repositioned by dragging them to a new location
 - **Delete**: Anyone can delete any feedback via the delete button (no authentication)
+- **Reactions**: Users can react to feedback with emojis (👍 ✅ ❤️ 🔥 👀) to mark as done, agree, or show support
 - **IP tracking**: IP addresses are captured automatically from request headers
-- **i18n**: Language toggle (EN/DE) in bottom-right switches all UI text
+- **i18n**: Language selector (EN/DE/GA) in bottom-right switches all UI text
 
 ## Features
 
 ### Persistent Pins
 
 All feedback submitted for a page is displayed as pins. Pins are fetched on mount and remain visible to all users. Click any pin to see the full feedback.
+
+### Drag and Drop Pins
+
+Pins can be repositioned by clicking and dragging them to a new location (or tap and drag on mobile). The new position is automatically saved to the database. This is useful when:
+
+- A pin is obscuring important content
+- Feedback needs to be repositioned after page layout changes
+- Multiple pins overlap and need to be spread out
+
+Desktop: Click and drag with mouse
+Mobile: Touch and drag with finger
+
+### Mobile Support
+
+The feedback tool is fully mobile-friendly with:
+- Touch event support for dragging pins
+- Responsive UI that adapts to screen size
+- Optimized button sizes for touch targets
+- Centered modals on small screens
+- All features work on phones and tablets
 
 ### Delete Feedback
 
@@ -103,7 +126,24 @@ IP addresses are automatically captured from `x-forwarded-for` or `x-real-ip` he
 
 ### Internationalization
 
-Toggle between English and German using the language switcher (EN | DE) next to the Feedback button. All UI text updates instantly.
+Switch between English, German, and Irish using the language selector next to the Feedback button. The active language is highlighted with bold text and a light background. All UI text updates instantly.
+
+Supported languages:
+- **EN** (English)
+- **DE** (Deutsch/German)
+- **GA** (Gaeilge/Irish)
+
+### Reactions
+
+Users can react to any feedback with predefined emojis:
+
+- 👍 (Agree/Like)
+- ✅ (Done/Completed)
+- ❤️ (Love/Important)
+- 🔥 (Hot/Priority)
+- 👀 (Watching/Noted)
+
+Click a reaction to toggle it on/off. Reaction counts are shown next to each emoji. The same user (identified by session) can only react once per type — clicking again removes the reaction. Reactions are stored in the `fi_feedback_reactions` table.
 
 ## Disable for production
 
@@ -122,14 +162,21 @@ npm i github:studiofi/fi-edback#<commit-sha>
 
 All projects write to a shared `fi_feedback` table in one Neon database.
 Rows are separated by the `project_slug` column.
-Run `SQL_MIGRATION.sql` (in the fi-edback repo) once in the Neon console to create the table.
+Run `SQL_MIGRATION.sql` (in the fi-edback repo) once in the Neon console to create the tables.
 
-**Schema includes**:
+**fi_feedback schema includes**:
 
 - `id`, `project_slug`, `page_url`, `x`, `y`, `message`
 - `name`, `email` (optional user-provided fields)
 - `session_id` (anonymous session cookie for rate limiting)
 - `user_agent`, `ip_address` (auto-captured from request headers)
+- `created_at` (timestamp)
+
+**fi_feedback_reactions schema includes**:
+
+- `id`, `feedback_id` (foreign key to fi_feedback)
+- `reaction` (emoji or text like "done", "agree")
+- `session_id` (prevents duplicate reactions from same user)
 - `created_at` (timestamp)
 
 ## Troubleshooting

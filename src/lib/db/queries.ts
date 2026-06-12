@@ -1,12 +1,12 @@
 import type { NeonQueryFn } from "./client";
-import type { FeedbackPayload, FeedbackRow } from "../types";
+import type { FeedbackPayload, FeedbackRow, ReactionSummary } from "../types";
 import { RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_SECONDS } from "../config";
 
 export async function insertFeedback(
   sql: NeonQueryFn,
   payload: FeedbackPayload,
-): Promise<void> {
-  await sql`
+): Promise<FeedbackRow> {
+  const rows = await sql`
     INSERT INTO fi_feedback (
       project_slug,
       page_url,
@@ -30,7 +30,26 @@ export async function insertFeedback(
       ${payload.userAgent ?? null},
       ${payload.ipAddress ?? null}
     )
+    RETURNING
+      id,
+      project_slug as "projectSlug",
+      page_url as "pageUrl",
+      x,
+      y,
+      message,
+      name,
+      email,
+      session_id as "sessionId",
+      user_agent as "userAgent",
+      ip_address as "ipAddress",
+      created_at as "createdAt"
   `;
+
+  const row = rows[0];
+  return {
+    ...row,
+    createdAt: new Date(row.createdAt as string),
+  } as FeedbackRow;
 }
 
 /**
@@ -41,6 +60,7 @@ export async function getFeedbackForPage(
   sql: NeonQueryFn,
   projectSlug: string,
   pageUrl: string,
+  sessionId: string,
 ): Promise<FeedbackRow[]> {
   const rows = await sql`
     SELECT 
@@ -62,10 +82,26 @@ export async function getFeedbackForPage(
     ORDER BY created_at DESC
   `;
 
-  return rows.map((row) => ({
+  const feedback = rows.map((row) => ({
     ...row,
     createdAt: new Date(row.createdAt as string),
   })) as FeedbackRow[];
+
+  // Fetch reactions for all feedback items
+  if (feedback.length > 0) {
+    const feedbackIds = feedback.map((f) => f.id);
+    const reactionsMap = await getReactionsForFeedback(
+      sql,
+      feedbackIds,
+      sessionId,
+    );
+
+    for (const item of feedback) {
+      item.reactions = reactionsMap.get(item.id) || [];
+    }
+  }
+
+  return feedback;
 }
 
 /**
@@ -76,12 +112,13 @@ export async function deleteFeedback(
   sql: NeonQueryFn,
   id: string,
 ): Promise<boolean> {
-  const result = await sql`
+  await sql`
     DELETE FROM fi_feedback
     WHERE id = ${id}
   `;
 
-  return result.count > 0;
+  // Delete is successful if no error was thrown
+  return true;
 }
 
 /**
@@ -106,4 +143,109 @@ export async function isRateLimited(
 
   const count = (rows[0] as { count: number }).count;
   return count >= RATE_LIMIT_MAX;
+}
+
+/**
+ * Get reaction summaries for multiple feedback items.
+ * Returns a map of feedbackId -> ReactionSummary[]
+ */
+export async function getReactionsForFeedback(
+  sql: NeonQueryFn,
+  feedbackIds: string[],
+  currentSessionId: string,
+): Promise<Map<string, ReactionSummary[]>> {
+  if (feedbackIds.length === 0) {
+    return new Map();
+  }
+
+  const rows = await sql`
+    SELECT 
+      feedback_id as "feedbackId",
+      reaction,
+      COUNT(*)::int as count,
+      BOOL_OR(session_id = ${currentSessionId}) as "hasReacted"
+    FROM fi_feedback_reactions
+    WHERE feedback_id = ANY(${feedbackIds})
+    GROUP BY feedback_id, reaction
+    ORDER BY count DESC
+  `;
+
+  const map = new Map<string, ReactionSummary[]>();
+
+  for (const row of rows) {
+    const typed = row as {
+      feedbackId: string;
+      reaction: string;
+      count: number;
+      hasReacted: boolean;
+    };
+    if (!map.has(typed.feedbackId)) {
+      map.set(typed.feedbackId, []);
+    }
+    map.get(typed.feedbackId)!.push({
+      reaction: typed.reaction,
+      count: typed.count,
+      hasReacted: typed.hasReacted,
+    });
+  }
+
+  return map;
+}
+
+/**
+ * Toggle a reaction: add if not present, remove if already present.
+ * Returns true if added, false if removed.
+ */
+export async function toggleReaction(
+  sql: NeonQueryFn,
+  feedbackId: string,
+  reaction: string,
+  sessionId: string,
+): Promise<boolean> {
+  // Check if reaction already exists
+  const existing = await sql`
+    SELECT id
+    FROM fi_feedback_reactions
+    WHERE feedback_id = ${feedbackId}
+      AND reaction = ${reaction}
+      AND session_id = ${sessionId}
+  `;
+
+  if (existing.length > 0) {
+    // Remove reaction
+    await sql`
+      DELETE FROM fi_feedback_reactions
+      WHERE feedback_id = ${feedbackId}
+        AND reaction = ${reaction}
+        AND session_id = ${sessionId}
+    `;
+    return false;
+  } else {
+    // Add reaction
+    await sql`
+      INSERT INTO fi_feedback_reactions (feedback_id, reaction, session_id)
+      VALUES (${feedbackId}, ${reaction}, ${sessionId})
+      ON CONFLICT (feedback_id, reaction, session_id) DO NOTHING
+    `;
+    return true;
+  }
+}
+
+/**
+ * Update the position of a feedback pin.
+ */
+export async function updateFeedbackPosition(
+  sql: NeonQueryFn,
+  feedbackId: string,
+  x: number,
+  y: number,
+): Promise<boolean> {
+  await sql`
+    UPDATE fi_feedback
+    SET x = ${x}, y = ${y}
+    WHERE id = ${feedbackId}
+  `;
+
+  // Update is successful if no error was thrown
+  return true;
 }

@@ -20,4 +20,19 @@ export interface FeedbackConfig {
 export interface FeedbackRow extends FeedbackPayload {
   id: string;
   createdAt: Date;
+  reactions?: ReactionSummary[];
+}
+
+export interface Reaction {
+  id: string;
+  feedbackId: string;
+  reaction: string;
+  sessionId: string;
+  createdAt: Date;
+}
+
+export interface ReactionSummary {
+  reaction: string;
+  count: number;
+  hasReacted: boolean; // true if current session has reacted with this type
 }

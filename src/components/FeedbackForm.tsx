@@ -4,12 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { getOrCreateSessionId } from "../lib/session";
 import type { Language } from "../lib/i18n";
 import { getTranslations } from "../lib/i18n";
-
-interface Pin {
-  id: string;
-  x: number;
-  y: number;
-}
+import type { FeedbackRow } from "../lib/types";
 
 interface FeedbackFormProps {
   /** Document-relative X coordinate of the pin */
@@ -19,7 +14,7 @@ interface FeedbackFormProps {
   projectSlug: string;
   apiPath: string;
   language: Language;
-  onSubmitted: (pin: Pin) => void;
+  onSubmitted: (feedback: FeedbackRow) => void;
   onCancelled: () => void;
 }
 
@@ -94,14 +89,11 @@ export function FeedbackForm({
         return;
       }
 
+      const data = (await res.json()) as { feedback: FeedbackRow };
       setStatus("success");
-      const id =
-        typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-          ? crypto.randomUUID()
-          : Math.random().toString(36).slice(2);
 
       setTimeout(() => {
-        onSubmitted({ id, x, y });
+        onSubmitted(data.feedback);
       }, 900);
     } catch {
       setStatus("error");
@@ -117,10 +109,15 @@ export function FeedbackForm({
   const viewportY = y - window.scrollY;
 
   // Keep the form inside the viewport
-  const formWidth = 300;
+  const isMobile = window.innerWidth < 640;
+  const formWidth = isMobile ? Math.min(window.innerWidth - 24, 300) : 300;
   const formHeight = 320;
-  const left = Math.min(viewportX + 14, window.innerWidth - formWidth - 12);
-  const top = Math.min(viewportY + 14, window.innerHeight - formHeight - 12);
+  const left = isMobile
+    ? 12
+    : Math.min(viewportX + 14, window.innerWidth - formWidth - 12);
+  const top = isMobile
+    ? Math.min(window.innerHeight - formHeight - 12, window.innerHeight / 2 - formHeight / 2)
+    : Math.min(viewportY + 14, window.innerHeight - formHeight - 12);
 
   const inputStyle: React.CSSProperties = {
     width: "100%",

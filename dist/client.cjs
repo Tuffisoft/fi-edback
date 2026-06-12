@@ -26,16 +26,17 @@ __export(client_exports, {
 module.exports = __toCommonJS(client_exports);
 
 // src/components/FeedbackRoot.tsx
-var import_react4 = require("react");
+var import_react5 = require("react");
 
 // src/components/FeedbackLauncher.tsx
-var import_react3 = require("react");
+var import_react4 = require("react");
 
 // src/lib/i18n.ts
 var translations = {
   en: {
     feedbackButton: "Feedback",
     cancelButton: "Cancel",
+    instructionText: "Click the Feedback button to leave a comment",
     messagePlaceholder: "What would you like to tell us?",
     messageLabel: "Message",
     nameLabel: "Name (optional)",
@@ -49,11 +50,13 @@ var translations = {
     feedbackSubmitted: "Feedback submitted",
     deleteFeedback: "Delete feedback",
     by: "by",
-    anonymous: "Anonymous"
+    anonymous: "Anonymous",
+    reactions: "Reactions"
   },
   de: {
     feedbackButton: "Feedback",
     cancelButton: "Abbrechen",
+    instructionText: "Klicken Sie auf die Feedback-Schaltfl\xE4che, um einen Kommentar zu hinterlassen",
     messagePlaceholder: "Was m\xF6chten Sie uns mitteilen?",
     messageLabel: "Nachricht",
     nameLabel: "Name (optional)",
@@ -67,7 +70,28 @@ var translations = {
     feedbackSubmitted: "Feedback \xFCbermittelt",
     deleteFeedback: "Feedback l\xF6schen",
     by: "von",
-    anonymous: "Anonym"
+    anonymous: "Anonym",
+    reactions: "Reaktionen"
+  },
+  ga: {
+    feedbackButton: "Aiseolas",
+    cancelButton: "Cealaigh",
+    instructionText: "Clice\xE1il an cnaipe Aiseolas chun tr\xE1cht a fh\xE1g\xE1il",
+    messagePlaceholder: "Cad ba mhaith leat a r\xE1 linn?",
+    messageLabel: "Teachtaireacht",
+    nameLabel: "Ainm (roghnach)",
+    emailLabel: "R\xEDomhphost (roghnach)",
+    submitButton: "Seol aiseolas",
+    submitting: "\xC1 sheoladh...",
+    successMessage: "Go raibh maith agat!",
+    successDescription: "Seoladh d'aiseolas.",
+    errorTitle: "Earr\xE1id",
+    clickToPlace: "Clice\xE1il \xE1it ar bith chun bior\xE1in aiseolais a chur",
+    feedbackSubmitted: "Aiseolas seolta",
+    deleteFeedback: "Scrios aiseolas",
+    by: "le",
+    anonymous: "Gan ainm",
+    reactions: "Imoibrithe"
   }
 };
 function getTranslations(lang) {
@@ -76,7 +100,10 @@ function getTranslations(lang) {
 
 // src/components/FeedbackOverlay.tsx
 var import_jsx_runtime = require("react/jsx-runtime");
-function FeedbackOverlay({ language, onPinPlaced }) {
+function FeedbackOverlay({
+  language,
+  onPinPlaced
+}) {
   const t = getTranslations(language);
   function handleClick(e) {
     const x = e.clientX + window.scrollX;
@@ -105,57 +132,125 @@ function FeedbackOverlay({ language, onPinPlaced }) {
 }
 
 // src/components/FeedbackPinLayer.tsx
+var import_react = require("react");
 var import_jsx_runtime2 = require("react/jsx-runtime");
 function FeedbackPinLayer({
   pins,
   onPinClick,
+  onPinMoved,
   title = "Feedback submitted"
 }) {
-  if (pins.length === 0) return null;
-  return /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_jsx_runtime2.Fragment, { children: pins.map((pin) => /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
-    "div",
-    {
-      title,
-      onClick: (e) => {
-        if (onPinClick) {
-          e.stopPropagation();
-          onPinClick(pin.id);
-        }
-      },
-      style: {
-        // position: absolute so the pin tracks document-relative coordinates
-        position: "absolute",
-        left: pin.x - 10,
-        top: pin.y - 22,
-        zIndex: 9996,
-        width: "20px",
-        height: "20px",
-        borderRadius: "50% 50% 50% 0",
-        transform: "rotate(-45deg)",
-        backgroundColor: "#18181b",
-        border: "2px solid #fff",
-        boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
-        pointerEvents: onPinClick ? "auto" : "none",
-        cursor: onPinClick ? "pointer" : "default",
-        transition: "transform 0.15s ease"
-      },
-      onMouseEnter: (e) => {
-        if (onPinClick) {
-          e.currentTarget.style.transform = "rotate(-45deg) scale(1.1)";
-        }
-      },
-      onMouseLeave: (e) => {
-        if (onPinClick) {
-          e.currentTarget.style.transform = "rotate(-45deg) scale(1)";
+  const [draggingId, setDraggingId] = (0, import_react.useState)(null);
+  const [dragOffset, setDragOffset] = (0, import_react.useState)({ x: 0, y: 0 });
+  const [tempPosition, setTempPosition] = (0, import_react.useState)(null);
+  const dragStartPos = (0, import_react.useRef)({ x: 0, y: 0 });
+  const hasMoved = (0, import_react.useRef)(false);
+  const longPressTimer = (0, import_react.useRef)(null);
+  (0, import_react.useEffect)(() => {
+    if (!draggingId) return;
+    const handleMove = (clientX, clientY) => {
+      hasMoved.current = true;
+      const x = clientX + window.scrollX - dragOffset.x;
+      const y = clientY + window.scrollY - dragOffset.y;
+      setTempPosition({ x, y });
+    };
+    const handleMouseMove = (e) => {
+      handleMove(e.clientX, e.clientY);
+    };
+    const handleTouchMove = (e) => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      handleMove(touch.clientX, touch.clientY);
+    };
+    const handleEnd = () => {
+      if (draggingId && tempPosition && hasMoved.current) {
+        if (onPinMoved) {
+          onPinMoved(draggingId, tempPosition.x, tempPosition.y);
         }
       }
-    },
-    pin.id
-  )) });
+      setDraggingId(null);
+      setTempPosition(null);
+      hasMoved.current = false;
+    };
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleEnd);
+    document.addEventListener("touchmove", handleTouchMove, { passive: false });
+    document.addEventListener("touchend", handleEnd);
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleEnd);
+      document.removeEventListener("touchmove", handleTouchMove);
+      document.removeEventListener("touchend", handleEnd);
+    };
+  }, [draggingId, dragOffset, tempPosition, onPinMoved]);
+  if (pins.length === 0) return null;
+  return /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_jsx_runtime2.Fragment, { children: pins.map((pin) => {
+    const isDragging = draggingId === pin.id;
+    const position = isDragging && tempPosition ? tempPosition : { x: pin.x, y: pin.y };
+    const handleStart = (clientX, clientY) => {
+      hasMoved.current = false;
+      const pinCenterX = pin.x;
+      const pinCenterY = pin.y;
+      const offsetX = clientX + window.scrollX - pinCenterX;
+      const offsetY = clientY + window.scrollY - pinCenterY;
+      setDragOffset({ x: offsetX, y: offsetY });
+      setDraggingId(pin.id);
+      dragStartPos.current = { x: clientX, y: clientY };
+    };
+    return /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
+      "div",
+      {
+        title,
+        onMouseDown: (e) => {
+          e.stopPropagation();
+          handleStart(e.clientX, e.clientY);
+        },
+        onTouchStart: (e) => {
+          e.stopPropagation();
+          const touch = e.touches[0];
+          handleStart(touch.clientX, touch.clientY);
+        },
+        onClick: (e) => {
+          if (!hasMoved.current && onPinClick) {
+            e.stopPropagation();
+            onPinClick(pin.id);
+          }
+        },
+        style: {
+          position: "absolute",
+          left: position.x - 10,
+          top: position.y - 22,
+          zIndex: isDragging ? 9998 : 9996,
+          width: "20px",
+          height: "20px",
+          borderRadius: "50% 50% 50% 0",
+          transform: isDragging ? "rotate(-45deg) scale(1.15)" : "rotate(-45deg)",
+          backgroundColor: "#18181b",
+          border: "2px solid #fff",
+          boxShadow: isDragging ? "0 8px 24px rgba(0,0,0,0.4)" : "0 2px 6px rgba(0,0,0,0.3)",
+          pointerEvents: "auto",
+          cursor: isDragging ? "grabbing" : "grab",
+          transition: isDragging ? "none" : "transform 0.15s ease, box-shadow 0.15s ease",
+          userSelect: "none"
+        },
+        onMouseEnter: (e) => {
+          if (!isDragging) {
+            e.currentTarget.style.transform = "rotate(-45deg) scale(1.1)";
+          }
+        },
+        onMouseLeave: (e) => {
+          if (!isDragging) {
+            e.currentTarget.style.transform = "rotate(-45deg) scale(1)";
+          }
+        }
+      },
+      pin.id
+    );
+  }) });
 }
 
 // src/components/FeedbackForm.tsx
-var import_react = require("react");
+var import_react2 = require("react");
 
 // src/lib/config.ts
 var API_PATH = "/api/fi-edback";
@@ -195,15 +290,15 @@ function FeedbackForm({
   onSubmitted,
   onCancelled
 }) {
-  const [message, setMessage] = (0, import_react.useState)("");
-  const [name, setName] = (0, import_react.useState)("");
-  const [email, setEmail] = (0, import_react.useState)("");
-  const [website, setWebsite] = (0, import_react.useState)("");
-  const [status, setStatus] = (0, import_react.useState)("idle");
-  const [errorText, setErrorText] = (0, import_react.useState)("");
-  const messageRef = (0, import_react.useRef)(null);
+  const [message, setMessage] = (0, import_react2.useState)("");
+  const [name, setName] = (0, import_react2.useState)("");
+  const [email, setEmail] = (0, import_react2.useState)("");
+  const [website, setWebsite] = (0, import_react2.useState)("");
+  const [status, setStatus] = (0, import_react2.useState)("idle");
+  const [errorText, setErrorText] = (0, import_react2.useState)("");
+  const messageRef = (0, import_react2.useRef)(null);
   const t = getTranslations(language);
-  (0, import_react.useEffect)(() => {
+  (0, import_react2.useEffect)(() => {
     messageRef.current?.focus();
   }, []);
   async function handleSubmit(e) {
@@ -238,17 +333,17 @@ function FeedbackForm({
         return;
       }
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
+        const data2 = await res.json().catch(() => ({}));
         setStatus("error");
         setErrorText(
-          data.error ?? "Something went wrong. Please try again."
+          data2.error ?? "Something went wrong. Please try again."
         );
         return;
       }
+      const data = await res.json();
       setStatus("success");
-      const id = typeof crypto !== "undefined" && typeof crypto.randomUUID === "function" ? crypto.randomUUID() : Math.random().toString(36).slice(2);
       setTimeout(() => {
-        onSubmitted({ id, x, y });
+        onSubmitted(data.feedback);
       }, 900);
     } catch {
       setStatus("error");
@@ -259,10 +354,11 @@ function FeedbackForm({
   }
   const viewportX = x - window.scrollX;
   const viewportY = y - window.scrollY;
-  const formWidth = 300;
+  const isMobile = window.innerWidth < 640;
+  const formWidth = isMobile ? Math.min(window.innerWidth - 24, 300) : 300;
   const formHeight = 320;
-  const left = Math.min(viewportX + 14, window.innerWidth - formWidth - 12);
-  const top = Math.min(viewportY + 14, window.innerHeight - formHeight - 12);
+  const left = isMobile ? 12 : Math.min(viewportX + 14, window.innerWidth - formWidth - 12);
+  const top = isMobile ? Math.min(window.innerHeight - formHeight - 12, window.innerHeight / 2 - formHeight / 2) : Math.min(viewportY + 14, window.innerHeight - formHeight - 12);
   const inputStyle = {
     width: "100%",
     border: "1px solid #e4e4e7",
@@ -426,17 +522,44 @@ function FeedbackForm({
 }
 
 // src/components/FeedbackPopup.tsx
-var import_react2 = require("react");
+var import_react3 = require("react");
 var import_jsx_runtime4 = require("react/jsx-runtime");
+var REACTIONS = ["\u{1F44D}", "\u2705", "\u2764\uFE0F", "\u{1F525}", "\u{1F440}"];
 function FeedbackPopup({
   feedback,
   apiPath,
   language,
   onDeleted,
+  onReactionToggled,
   onClose
 }) {
-  const [isDeleting, setIsDeleting] = (0, import_react2.useState)(false);
+  const [isDeleting, setIsDeleting] = (0, import_react3.useState)(false);
+  const [reactingTo, setReactingTo] = (0, import_react3.useState)(null);
   const t = getTranslations(language);
+  async function handleReaction(reaction) {
+    if (reactingTo) return;
+    setReactingTo(reaction);
+    const sessionId = getOrCreateSessionId();
+    try {
+      const res = await fetch(apiPath, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          feedbackId: feedback.id,
+          reaction,
+          sessionId
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        onReactionToggled(feedback.id, reaction, data.added);
+      }
+    } catch (error) {
+      console.error("[fi-edback] Failed to toggle reaction:", error);
+    } finally {
+      setReactingTo(null);
+    }
+  }
   async function handleDelete() {
     if (isDeleting) return;
     if (!confirm(t.deleteFeedback + "?")) return;
@@ -458,10 +581,11 @@ function FeedbackPopup({
   }
   const viewportX = feedback.x - window.scrollX;
   const viewportY = feedback.y - window.scrollY;
-  const popupWidth = 300;
+  const isMobile = window.innerWidth < 640;
+  const popupWidth = isMobile ? Math.min(window.innerWidth - 24, 300) : 300;
   const popupMaxHeight = 400;
-  const left = Math.min(viewportX + 14, window.innerWidth - popupWidth - 12);
-  const top = Math.min(viewportY + 14, window.innerHeight - popupMaxHeight - 12);
+  const left = isMobile ? 12 : Math.min(viewportX + 14, window.innerWidth - popupWidth - 12);
+  const top = isMobile ? Math.min(window.innerHeight - popupMaxHeight - 12, window.innerHeight / 2 - popupMaxHeight / 2) : Math.min(viewportY + 14, window.innerHeight - popupMaxHeight - 12);
   return /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)(import_jsx_runtime4.Fragment, { children: [
     /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
       "div",
@@ -556,6 +680,71 @@ function FeedbackPopup({
               children: feedback.message
             }
           ),
+          /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { style: { marginBottom: "16px" }, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+              "div",
+              {
+                style: {
+                  fontSize: "12px",
+                  color: "#71717a",
+                  marginBottom: "8px",
+                  fontWeight: "500"
+                },
+                children: t.reactions
+              }
+            ),
+            /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { style: { display: "flex", flexWrap: "wrap", gap: "8px" }, children: REACTIONS.map((reaction) => {
+              const summary = feedback.reactions?.find(
+                (r) => r.reaction === reaction
+              );
+              const count = summary?.count || 0;
+              const hasReacted = summary?.hasReacted || false;
+              return /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)(
+                "button",
+                {
+                  onClick: () => handleReaction(reaction),
+                  disabled: reactingTo !== null,
+                  style: {
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    padding: "6px 10px",
+                    backgroundColor: hasReacted ? "#e0e7ff" : "#f4f4f5",
+                    border: hasReacted ? "2px solid #6366f1" : "1px solid #e4e4e7",
+                    borderRadius: "16px",
+                    fontSize: "14px",
+                    cursor: reactingTo ? "not-allowed" : "pointer",
+                    opacity: reactingTo ? 0.6 : 1,
+                    fontFamily: "system-ui, sans-serif",
+                    transition: "all 0.15s ease"
+                  },
+                  onMouseEnter: (e) => {
+                    if (!reactingTo) {
+                      e.currentTarget.style.transform = "scale(1.05)";
+                    }
+                  },
+                  onMouseLeave: (e) => {
+                    e.currentTarget.style.transform = "scale(1)";
+                  },
+                  children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { children: reaction }),
+                    count > 0 && /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+                      "span",
+                      {
+                        style: {
+                          fontSize: "12px",
+                          color: hasReacted ? "#6366f1" : "#71717a",
+                          fontWeight: "600"
+                        },
+                        children: count
+                      }
+                    )
+                  ]
+                },
+                reaction
+              );
+            }) })
+          ] }),
           /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
             "button",
             {
@@ -586,32 +775,32 @@ function FeedbackPopup({
 // src/components/FeedbackLauncher.tsx
 var import_jsx_runtime5 = require("react/jsx-runtime");
 function FeedbackLauncher({ projectSlug }) {
-  const [language, setLanguage] = (0, import_react3.useState)("en");
-  const [isActive, setIsActive] = (0, import_react3.useState)(false);
-  const [pins, setPins] = (0, import_react3.useState)([]);
-  const [fullFeedback, setFullFeedback] = (0, import_react3.useState)([]);
-  const [pendingPin, setPendingPin] = (0, import_react3.useState)(
+  const [language, setLanguage] = (0, import_react4.useState)("en");
+  const [isActive, setIsActive] = (0, import_react4.useState)(false);
+  const [pins, setPins] = (0, import_react4.useState)([]);
+  const [fullFeedback, setFullFeedback] = (0, import_react4.useState)([]);
+  const [pendingPin, setPendingPin] = (0, import_react4.useState)(
     null
   );
-  const [selectedFeedbackId, setSelectedFeedbackId] = (0, import_react3.useState)(
+  const [selectedFeedbackId, setSelectedFeedbackId] = (0, import_react4.useState)(
     null
   );
-  const [isLoading, setIsLoading] = (0, import_react3.useState)(true);
+  const [isLoading, setIsLoading] = (0, import_react4.useState)(true);
   const t = getTranslations(language);
-  (0, import_react3.useEffect)(() => {
+  (0, import_react4.useEffect)(() => {
     async function fetchFeedback() {
       try {
+        const sessionId = getOrCreateSessionId();
         const params = new URLSearchParams({
           projectSlug,
-          pageUrl: window.location.href
+          pageUrl: window.location.href,
+          sessionId
         });
         const res = await fetch(`${API_PATH}?${params}`);
         if (res.ok) {
           const data = await res.json();
           setFullFeedback(data.feedback);
-          setPins(
-            data.feedback.map((f) => ({ id: f.id, x: f.x, y: f.y }))
-          );
+          setPins(data.feedback.map((f) => ({ id: f.id, x: f.x, y: f.y })));
         }
       } catch (error) {
         console.error("[fi-edback] Failed to fetch feedback:", error);
@@ -633,8 +822,12 @@ function FeedbackLauncher({ projectSlug }) {
     setIsActive(false);
     setPendingPin({ x, y });
   }
-  function handleFormSubmitted(pin) {
-    setPins((prev) => [...prev, pin]);
+  function handleFormSubmitted(feedback) {
+    setPins((prev) => [
+      ...prev,
+      { id: feedback.id, x: feedback.x, y: feedback.y }
+    ]);
+    setFullFeedback((prev) => [...prev, feedback]);
     setPendingPin(null);
   }
   function handleFormCancelled() {
@@ -651,64 +844,163 @@ function FeedbackLauncher({ projectSlug }) {
     setFullFeedback((prev) => prev.filter((f) => f.id !== id));
     setSelectedFeedbackId(null);
   }
+  function handleReactionToggled(feedbackId, reaction, added) {
+    setFullFeedback(
+      (prev) => prev.map((f) => {
+        if (f.id !== feedbackId) return f;
+        const reactions = f.reactions || [];
+        const existingIndex = reactions.findIndex(
+          (r) => r.reaction === reaction
+        );
+        if (existingIndex >= 0) {
+          const updated = [...reactions];
+          if (added) {
+            updated[existingIndex] = {
+              ...updated[existingIndex],
+              count: updated[existingIndex].count + 1,
+              hasReacted: true
+            };
+          } else {
+            const newCount = updated[existingIndex].count - 1;
+            if (newCount === 0) {
+              updated.splice(existingIndex, 1);
+            } else {
+              updated[existingIndex] = {
+                ...updated[existingIndex],
+                count: newCount,
+                hasReacted: false
+              };
+            }
+          }
+          return { ...f, reactions: updated };
+        } else {
+          return {
+            ...f,
+            reactions: [...reactions, { reaction, count: 1, hasReacted: true }]
+          };
+        }
+      })
+    );
+  }
+  async function handlePinMoved(id, x, y) {
+    setPins((prev) => prev.map((p) => p.id === id ? { ...p, x, y } : p));
+    setFullFeedback(
+      (prev) => prev.map((f) => f.id === id ? { ...f, x, y } : f)
+    );
+    try {
+      const res = await fetch(API_PATH, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ feedbackId: id, x, y })
+      });
+      if (!res.ok) {
+        console.error("[fi-edback] Failed to update pin position");
+      }
+    } catch (error) {
+      console.error("[fi-edback] Failed to update pin position:", error);
+    }
+  }
   function toggleLanguage() {
-    setLanguage((prev) => prev === "en" ? "de" : "en");
+    setLanguage((prev) => {
+      if (prev === "en") return "de";
+      if (prev === "de") return "ga";
+      return "en";
+    });
   }
   const selectedFeedback = fullFeedback.find(
     (f) => f.id === selectedFeedbackId
   );
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
   return /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(import_jsx_runtime5.Fragment, { children: [
-    !isActive && !pendingPin && /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(
-      "button",
+    !isActive && !pendingPin && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+      "div",
       {
-        onClick: toggleLanguage,
-        "aria-label": "Switch language",
         style: {
           position: "fixed",
-          bottom: "24px",
-          right: "140px",
+          bottom: isMobile ? "90px" : "24px",
+          right: isMobile ? "12px" : "140px",
           zIndex: 9998,
+          display: "flex",
+          gap: "4px",
           backgroundColor: "#fff",
-          color: "#18181b",
           border: "1px solid #e4e4e7",
           borderRadius: "6px",
-          padding: "6px 10px",
-          fontSize: "12px",
-          fontWeight: "500",
-          cursor: "pointer",
+          padding: "4px",
           boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
           fontFamily: "system-ui, sans-serif"
         },
-        children: [
-          language === "en" ? "EN" : "DE",
-          " | ",
-          language === "en" ? "DE" : "EN"
-        ]
+        children: ["en", "de", "ga"].map((lang) => /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+          "button",
+          {
+            onClick: () => setLanguage(lang),
+            "aria-label": `Switch to ${lang.toUpperCase()}`,
+            style: {
+              padding: isMobile ? "6px 10px" : "4px 8px",
+              fontSize: isMobile ? "13px" : "12px",
+              fontWeight: language === lang ? "700" : "500",
+              color: language === lang ? "#18181b" : "#71717a",
+              backgroundColor: language === lang ? "#f4f4f5" : "transparent",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+              transition: "all 0.15s ease"
+            },
+            children: lang.toUpperCase()
+          },
+          lang
+        ))
       }
     ),
-    !isActive && !pendingPin && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
-      "button",
+    !isActive && !pendingPin && /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(
+      "div",
       {
-        onClick: handleActivate,
-        "aria-label": "Open feedback tool",
         style: {
           position: "fixed",
-          bottom: "24px",
-          right: "24px",
+          bottom: isMobile ? "12px" : "24px",
+          right: isMobile ? "12px" : "24px",
           zIndex: 9998,
-          backgroundColor: "#18181b",
-          color: "#fff",
-          border: "none",
-          borderRadius: "9999px",
-          padding: "10px 18px",
-          fontSize: "14px",
-          fontWeight: "500",
-          cursor: "pointer",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-          fontFamily: "system-ui, sans-serif",
-          letterSpacing: "0.01em"
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-end",
+          gap: "8px"
         },
-        children: t.feedbackButton
+        children: [
+          /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+            "div",
+            {
+              style: {
+                fontSize: isMobile ? "11px" : "12px",
+                color: "#71717a",
+                fontFamily: "system-ui, sans-serif",
+                textAlign: "right",
+                maxWidth: isMobile ? "160px" : "200px",
+                lineHeight: "1.4"
+              },
+              children: t.instructionText
+            }
+          ),
+          /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+            "button",
+            {
+              onClick: handleActivate,
+              "aria-label": "Open feedback tool",
+              style: {
+                backgroundColor: "#18181b",
+                color: "#fff",
+                border: "none",
+                borderRadius: "9999px",
+                padding: isMobile ? "12px 20px" : "10px 18px",
+                fontSize: isMobile ? "15px" : "14px",
+                fontWeight: "500",
+                cursor: "pointer",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                fontFamily: "system-ui, sans-serif",
+                letterSpacing: "0.01em"
+              },
+              children: t.feedbackButton
+            }
+          )
+        ]
       }
     ),
     isActive && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
@@ -718,15 +1010,15 @@ function FeedbackLauncher({ projectSlug }) {
         "aria-label": "Cancel feedback",
         style: {
           position: "fixed",
-          bottom: "24px",
-          right: "24px",
+          bottom: isMobile ? "12px" : "24px",
+          right: isMobile ? "12px" : "24px",
           zIndex: 9999,
           backgroundColor: "#ef4444",
           color: "#fff",
           border: "none",
           borderRadius: "9999px",
-          padding: "10px 18px",
-          fontSize: "14px",
+          padding: isMobile ? "12px 20px" : "10px 18px",
+          fontSize: isMobile ? "15px" : "14px",
           fontWeight: "500",
           cursor: "pointer",
           boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
@@ -741,6 +1033,7 @@ function FeedbackLauncher({ projectSlug }) {
       {
         pins,
         onPinClick: handlePinClick,
+        onPinMoved: handlePinMoved,
         title: t.feedbackSubmitted
       }
     ),
@@ -763,6 +1056,7 @@ function FeedbackLauncher({ projectSlug }) {
         apiPath: API_PATH,
         language,
         onDeleted: handleFeedbackDeleted,
+        onReactionToggled: handleReactionToggled,
         onClose: handlePopupClose
       }
     )
@@ -772,15 +1066,14 @@ function FeedbackLauncher({ projectSlug }) {
 // src/components/FeedbackRoot.tsx
 var import_jsx_runtime6 = require("react/jsx-runtime");
 function FeedbackRoot() {
-  const [mounted, setMounted] = (0, import_react4.useState)(false);
-  (0, import_react4.useEffect)(() => {
+  const [mounted, setMounted] = (0, import_react5.useState)(false);
+  (0, import_react5.useEffect)(() => {
     setMounted(true);
   }, []);
   if (!mounted) return null;
   if (process.env.NEXT_PUBLIC_ENABLE_FEEDBACK !== "true") return null;
   const projectSlug = process.env.NEXT_PUBLIC_FEEDBACK_PROJECT_SLUG;
   if (!projectSlug) return null;
-  if (window.innerWidth < 768) return null;
   return /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(FeedbackLauncher, { projectSlug });
 }
 // Annotate the CommonJS export names for ESM import in node:

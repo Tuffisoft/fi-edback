@@ -6,9 +6,12 @@ Floating visual feedback widget for Next.js preview deployments. Clients click a
 
 - ✅ Persistent pins — all feedback visible to everyone
 - ✅ Clickable pins — view message, author, and timestamp
+- ✅ Draggable pins — reposition feedback with mouse or touch
+- ✅ Reactions — engage with feedback using emojis (👍 ✅ ❤️ 🔥 👀)
 - ✅ Delete feedback — anyone can delete (no auth)
 - ✅ IP tracking — automatic fallback identifier
-- ✅ i18n — EN/DE language toggle
+- ✅ i18n — EN/DE/GA language toggle with visual active state
+- ✅ Mobile-friendly — touch support for dragging, responsive UI
 
 ---
 
@@ -33,13 +36,14 @@ npm i @neondatabase/serverless zod
 
 ```ts
 import { createFeedbackRouteHandler } from "fi-edback";
-export const { GET, POST, DELETE } = createFeedbackRouteHandler();
+export const { GET, POST, PATCH, DELETE } = createFeedbackRouteHandler();
 ```
 
 Provides:
 
 - `POST` — submit new feedback
-- `GET` — fetch existing feedback (query: `projectSlug`, `pageUrl`)
+- `GET` — fetch existing feedback (query: `projectSlug`, `pageUrl`, `sessionId`)
+- `PATCH` — toggle reactions or update pin position
 - `DELETE` — delete feedback by ID (query: `id`)
 
 ### 2. Root layout — add `<FeedbackRoot />` inside `<body>`

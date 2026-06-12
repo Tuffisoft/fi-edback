@@ -35,7 +35,7 @@ var RATE_LIMIT_WINDOW_SECONDS = 60;
 
 // src/lib/db/queries.ts
 async function insertFeedback(sql, payload) {
-  await sql`
+  const rows = await sql`
     INSERT INTO fi_feedback (
       project_slug,
       page_url,
@@ -59,9 +59,27 @@ async function insertFeedback(sql, payload) {
       ${payload.userAgent ?? null},
       ${payload.ipAddress ?? null}
     )
+    RETURNING
+      id,
+      project_slug as "projectSlug",
+      page_url as "pageUrl",
+      x,
+      y,
+      message,
+      name,
+      email,
+      session_id as "sessionId",
+      user_agent as "userAgent",
+      ip_address as "ipAddress",
+      created_at as "createdAt"
   `;
+  const row = rows[0];
+  return {
+    ...row,
+    createdAt: new Date(row.createdAt)
+  };
 }
-async function getFeedbackForPage(sql, projectSlug, pageUrl) {
+async function getFeedbackForPage(sql, projectSlug, pageUrl, sessionId) {
   const rows = await sql`
     SELECT 
       id,
@@ -81,17 +99,29 @@ async function getFeedbackForPage(sql, projectSlug, pageUrl) {
       AND page_url = ${pageUrl}
     ORDER BY created_at DESC
   `;
-  return rows.map((row) => ({
+  const feedback = rows.map((row) => ({
     ...row,
     createdAt: new Date(row.createdAt)
   }));
+  if (feedback.length > 0) {
+    const feedbackIds = feedback.map((f) => f.id);
+    const reactionsMap = await getReactionsForFeedback(
+      sql,
+      feedbackIds,
+      sessionId
+    );
+    for (const item of feedback) {
+      item.reactions = reactionsMap.get(item.id) || [];
+    }
+  }
+  return feedback;
 }
 async function deleteFeedback(sql, id) {
-  const result = await sql`
+  await sql`
     DELETE FROM fi_feedback
     WHERE id = ${id}
   `;
-  return result.count > 0;
+  return true;
 }
 async function isRateLimited(sql, sessionId) {
   const windowStart = new Date(
@@ -105,6 +135,68 @@ async function isRateLimited(sql, sessionId) {
   `;
   const count = rows[0].count;
   return count >= RATE_LIMIT_MAX;
+}
+async function getReactionsForFeedback(sql, feedbackIds, currentSessionId) {
+  if (feedbackIds.length === 0) {
+    return /* @__PURE__ */ new Map();
+  }
+  const rows = await sql`
+    SELECT 
+      feedback_id as "feedbackId",
+      reaction,
+      COUNT(*)::int as count,
+      BOOL_OR(session_id = ${currentSessionId}) as "hasReacted"
+    FROM fi_feedback_reactions
+    WHERE feedback_id = ANY(${feedbackIds})
+    GROUP BY feedback_id, reaction
+    ORDER BY count DESC
+  `;
+  const map = /* @__PURE__ */ new Map();
+  for (const row of rows) {
+    const typed = row;
+    if (!map.has(typed.feedbackId)) {
+      map.set(typed.feedbackId, []);
+    }
+    map.get(typed.feedbackId).push({
+      reaction: typed.reaction,
+      count: typed.count,
+      hasReacted: typed.hasReacted
+    });
+  }
+  return map;
+}
+async function toggleReaction(sql, feedbackId, reaction, sessionId) {
+  const existing = await sql`
+    SELECT id
+    FROM fi_feedback_reactions
+    WHERE feedback_id = ${feedbackId}
+      AND reaction = ${reaction}
+      AND session_id = ${sessionId}
+  `;
+  if (existing.length > 0) {
+    await sql`
+      DELETE FROM fi_feedback_reactions
+      WHERE feedback_id = ${feedbackId}
+        AND reaction = ${reaction}
+        AND session_id = ${sessionId}
+    `;
+    return false;
+  } else {
+    await sql`
+      INSERT INTO fi_feedback_reactions (feedback_id, reaction, session_id)
+      VALUES (${feedbackId}, ${reaction}, ${sessionId})
+      ON CONFLICT (feedback_id, reaction, session_id) DO NOTHING
+    `;
+    return true;
+  }
+}
+async function updateFeedbackPosition(sql, feedbackId, x, y) {
+  await sql`
+    UPDATE fi_feedback
+    SET x = ${x}, y = ${y}
+    WHERE id = ${feedbackId}
+  `;
+  return true;
 }
 
 // src/server/route-handler.ts
@@ -125,6 +217,7 @@ function createFeedbackRouteHandler() {
     const url = new URL(request.url);
     const projectSlug = url.searchParams.get("projectSlug");
     const pageUrl = url.searchParams.get("pageUrl");
+    const sessionId = url.searchParams.get("sessionId") || "";
     if (!projectSlug || !pageUrl) {
       return Response.json(
         { error: "Missing projectSlug or pageUrl query parameter" },
@@ -133,7 +226,12 @@ function createFeedbackRouteHandler() {
     }
     const sql = await getNeonClient(databaseUrl);
     try {
-      const feedback = await getFeedbackForPage(sql, projectSlug, pageUrl);
+      const feedback = await getFeedbackForPage(
+        sql,
+        projectSlug,
+        pageUrl,
+        sessionId
+      );
       return Response.json({ feedback });
     } catch (error) {
       console.error("[fi-edback] Database error:", error);
@@ -177,7 +275,7 @@ function createFeedbackRouteHandler() {
           { status: 429 }
         );
       }
-      await insertFeedback(sql, {
+      const feedback = await insertFeedback(sql, {
         projectSlug: parsed.data.projectSlug,
         pageUrl: parsed.data.pageUrl,
         x: parsed.data.x,
@@ -189,11 +287,59 @@ function createFeedbackRouteHandler() {
         userAgent: request.headers.get("user-agent") ?? void 0,
         ipAddress: getIpAddress(request)
       });
-      return Response.json({ ok: true });
+      return Response.json({ feedback });
     } catch (error) {
       console.error("[fi-edback] Database error:", error);
       return Response.json(
         { error: "Failed to save feedback" },
+        { status: 500 }
+      );
+    }
+  };
+  const PATCH = async (request) => {
+    const databaseUrl = process.env.DATABASE_URL;
+    if (!databaseUrl) {
+      console.error("[fi-edback] DATABASE_URL is not set");
+      return Response.json({ error: "Server misconfigured" }, { status: 500 });
+    }
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
+    const bodyObj = body;
+    const sql = await getNeonClient(databaseUrl);
+    if (typeof bodyObj.x === "number" && typeof bodyObj.y === "number") {
+      const { feedbackId: feedbackId2, x, y } = bodyObj;
+      if (!feedbackId2) {
+        return Response.json({ error: "Missing feedbackId" }, { status: 400 });
+      }
+      try {
+        await updateFeedbackPosition(sql, feedbackId2, x, y);
+        return Response.json({ ok: true });
+      } catch (error) {
+        console.error("[fi-edback] Database error:", error);
+        return Response.json(
+          { error: "Failed to update position" },
+          { status: 500 }
+        );
+      }
+    }
+    const { feedbackId, reaction, sessionId } = bodyObj;
+    if (!feedbackId || !reaction || !sessionId) {
+      return Response.json(
+        { error: "Missing feedbackId, reaction, or sessionId" },
+        { status: 400 }
+      );
+    }
+    try {
+      const added = await toggleReaction(sql, feedbackId, reaction, sessionId);
+      return Response.json({ added });
+    } catch (error) {
+      console.error("[fi-edback] Database error:", error);
+      return Response.json(
+        { error: "Failed to toggle reaction" },
         { status: 500 }
       );
     }
@@ -214,10 +360,7 @@ function createFeedbackRouteHandler() {
     }
     const sql = await getNeonClient(databaseUrl);
     try {
-      const deleted = await deleteFeedback(sql, id);
-      if (!deleted) {
-        return Response.json({ error: "Feedback not found" }, { status: 404 });
-      }
+      await deleteFeedback(sql, id);
       return Response.json({ ok: true });
     } catch (error) {
       console.error("[fi-edback] Database error:", error);
@@ -227,7 +370,7 @@ function createFeedbackRouteHandler() {
       );
     }
   };
-  return { GET, POST, DELETE };
+  return { GET, POST, PATCH, DELETE };
 }
 export {
   createFeedbackRouteHandler

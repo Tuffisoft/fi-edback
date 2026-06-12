@@ -16,19 +16,19 @@ src/                    ← package source (compiled to dist/ by tsup)
     config.ts           ← API_PATH, SESSION_COOKIE_NAME, rate limit constants
     validation.ts       ← Zod schema (includes honeypot field)
     session.ts          ← client-side anonymous session cookie
-    i18n.ts             ← translations (EN/DE) and Language type
+    i18n.ts             ← translations (EN/DE/GA) and Language type
     db/
       client.ts         ← getNeonClient() — cached neon() instance
-      queries.ts        ← insertFeedback(), getFeedbackForPage(), deleteFeedback(), isRateLimited()
+      queries.ts        ← insertFeedback(), getFeedbackForPage(), deleteFeedback(), toggleReaction(), updateFeedbackPosition(), isRateLimited()
   server/
-    route-handler.ts    ← createFeedbackRouteHandler() factory (GET, POST, DELETE)
+    route-handler.ts    ← createFeedbackRouteHandler() factory (GET, POST, PATCH, DELETE)
   components/
     FeedbackRoot.tsx    ← gate component (mounted check + env check)
-    FeedbackLauncher.tsx ← main orchestrator (language state, fetch pins, clickable pins)
+    FeedbackLauncher.tsx ← main orchestrator (language state, fetch pins, reactions, drag handlers)
     FeedbackOverlay.tsx
-    FeedbackPinLayer.tsx ← renders clickable pins
+    FeedbackPinLayer.tsx ← renders draggable pins with click/drag distinction
     FeedbackForm.tsx     ← submit new feedback
-    FeedbackPopup.tsx    ← view/delete existing feedback
+    FeedbackPopup.tsx    ← view/delete/react to existing feedback
 dev/                    ← Next.js 16 dev harness (not part of the package)
 dist/                   ← compiled output (committed to git)
 SQL_MIGRATION.sql       ← run once in Neon console to create fi_feedback table
@@ -51,6 +51,18 @@ SQL_MIGRATION.sql       ← run once in Neon console to create fi_feedback table
 
 All feedback for a page is fetched via GET endpoint on mount and displayed as clickable pins. Clicking a pin shows a popup with the full message, author, and timestamp.
 
+### Drag and drop pins
+
+Pins can be repositioned by clicking and dragging (desktop) or touch and drag (mobile). The new position is saved to the database via PATCH endpoint. The component uses mouse and touch events (mousedown/touchstart, mousemove/touchmove, mouseup/touchend) and distinguishes between clicks and drags to prevent popup from opening when dragging.
+
+### Mobile support
+
+Fully responsive UI with touch event support. Forms and popups center on mobile screens. Button sizes and spacing adapt for touch targets. The widget works seamlessly on phones and tablets without screen size restrictions.
+
+### Reactions
+
+Users can react to feedback with predefined emojis (👍 ✅ ❤️ 🔥 👀). Reactions are toggled via PATCH endpoint and stored in `fi_feedback_reactions` table. Same session can only react once per type.
+
 ### IP address tracking
 
 IP addresses are captured from `x-forwarded-for` or `x-real-ip` headers and stored in the database. This provides a fallback identifier when users don't enter a name.
@@ -61,7 +73,7 @@ Anyone can delete any feedback via the delete button in the popup. No authentica
 
 ### Internationalization
 
-EN/DE language toggle next to the Feedback button. All UI strings are centralized in `src/lib/i18n.ts`. Language state is managed in `FeedbackLauncher` and passed down to all components.
+EN/DE/GA language selector next to the Feedback button. Active language is highlighted with bold text and background. All UI strings are centralized in `src/lib/i18n.ts`. Language state is managed in `FeedbackLauncher` and passed down to all components.
 
 ## Build
 
@@ -87,7 +99,7 @@ Requires `NEXT_PUBLIC_ENABLE_FEEDBACK=true` and `NEXT_PUBLIC_FEEDBACK_PROJECT_SL
 
 ## Database
 
-Table: `fi_feedback` in a shared Neon PostgreSQL database. Created by running `SQL_MIGRATION.sql` once in the Neon console. All projects share one table, separated by `project_slug`.
+Tables: `fi_feedback` and `fi_feedback_reactions` in a shared Neon PostgreSQL database. Created by running `SQL_MIGRATION.sql` once in the Neon console. All projects share the tables, separated by `project_slug` in the feedback table. Reactions are linked via foreign key with cascade delete.
 
 ## Environment variables
 

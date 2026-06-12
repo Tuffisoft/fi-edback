@@ -1,6 +1,6 @@
 {
   "name": "fi-edback",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Reusable visual feedback widget for Next.js Vercel preview deployments",
   "license": "MIT",
   "private": true,

@@ -26,9 +26,5 @@ export function FeedbackRoot() {
   const projectSlug = process.env.NEXT_PUBLIC_FEEDBACK_PROJECT_SLUG;
   if (!projectSlug) return null;
 
-  // Hide on small screens — this is a desktop review tool.
-  // 768px matches the standard tablet/desktop breakpoint.
-  if (window.innerWidth < 768) return null;
-
   return <FeedbackLauncher projectSlug={projectSlug} />;
 }

@@ -12,6 +12,7 @@ type RouteHandler = (request: Request) => Promise<Response>;
 declare function createFeedbackRouteHandler(): {
     GET: RouteHandler;
     POST: RouteHandler;
+    PATCH: RouteHandler;
     DELETE: RouteHandler;
 };
 
@@ -35,6 +36,12 @@ interface FeedbackConfig {
 interface FeedbackRow extends FeedbackPayload {
     id: string;
     createdAt: Date;
+    reactions?: ReactionSummary[];
+}
+interface ReactionSummary {
+    reaction: string;
+    count: number;
+    hasReacted: boolean;
 }
 
 export { type FeedbackConfig, type FeedbackPayload, type FeedbackRow, createFeedbackRouteHandler };
