@@ -38,6 +38,7 @@ SQL_MIGRATION.sql       ← run once in Neon console to create fi_feedback table
 
 - All components are `'use client'` — none should have server-side rendering logic
 - `FeedbackRoot` uses a `mounted` state guard (`useEffect → setMounted(true)`) to prevent hydration mismatches — do not remove this
+- `FeedbackLauncher` tracks URL changes using a polling mechanism (100ms interval) combined with popstate event listeners — this ensures reliable detection of Next.js client-side navigation
 - The DB layer uses `@neondatabase/serverless` with raw SQL (no ORM) — keep queries in `src/lib/db/queries.ts`
 - `getNeonClient()` caches clients by URL — safe for Vercel serverless warm starts
 - Rate limiting is DB-based (count rows for sessionId in last 60s) — no Redis needed
@@ -46,6 +47,10 @@ SQL_MIGRATION.sql       ← run once in Neon console to create fi_feedback table
 - `dist/` is committed to git so `npm i github:Tuffisoft/fi-edback` works without a build step
 
 ## Features
+
+### Multi-page support
+
+Feedback is automatically scoped to individual pages by URL. The widget polls `window.location.href` every 100ms (plus listens to popstate events) to detect navigation changes. When the URL changes, it automatically refetches feedback for the new page. Each page's feedback is isolated — pins and reactions are specific to the current URL. The polling approach works reliably with Next.js Link components, browser navigation, and any routing mechanism.
 
 ### Persistent pins
 

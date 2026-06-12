@@ -33,22 +33,60 @@ export function FeedbackLauncher({ projectSlug }: FeedbackLauncherProps) {
     null,
   );
   const [isLoading, setIsLoading] = useState(true);
+  const [currentPath, setCurrentPath] = useState<string>("");
 
   const t = getTranslations(language);
 
-  // Fetch existing feedback on mount
+  // Track URL changes for client-side navigation
+  // Uses polling + event listeners for maximum compatibility with Next.js routing
   useEffect(() => {
+    let lastPath = window.location.href;
+    setCurrentPath(lastPath);
+
+    // Check for URL changes periodically
+    const checkUrlChange = () => {
+      const newPath = window.location.href;
+      if (newPath !== lastPath) {
+        lastPath = newPath;
+        setCurrentPath(newPath);
+      }
+    };
+
+    // Poll every 100ms to catch navigation changes
+    const intervalId = setInterval(checkUrlChange, 100);
+
+    // Also listen for popstate (back/forward buttons)
+    const handlePopState = () => {
+      checkUrlChange();
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, []);
+
+  // Fetch existing feedback when page changes
+  useEffect(() => {
+    if (!currentPath) return;
+
     async function fetchFeedback() {
+      setIsLoading(true);
+      console.log("[fi-edback] Fetching feedback for:", currentPath);
       try {
         const sessionId = getOrCreateSessionId();
         const params = new URLSearchParams({
           projectSlug,
-          pageUrl: window.location.href,
+          pageUrl: currentPath,
           sessionId,
         });
         const res = await fetch(`${API_PATH}?${params}`);
         if (res.ok) {
           const data = (await res.json()) as { feedback: FeedbackRow[] };
+          console.log("[fi-edback] Received feedback:", data.feedback.length, "items");
+          console.log("[fi-edback] URLs:", data.feedback.map(f => f.pageUrl));
           setFullFeedback(data.feedback);
           setPins(data.feedback.map((f) => ({ id: f.id, x: f.x, y: f.y })));
         }
@@ -59,7 +97,7 @@ export function FeedbackLauncher({ projectSlug }: FeedbackLauncherProps) {
       }
     }
     fetchFeedback();
-  }, [projectSlug]);
+  }, [projectSlug, currentPath]);
 
   function handleActivate() {
     setIsActive(true);
@@ -316,6 +354,7 @@ export function FeedbackLauncher({ projectSlug }: FeedbackLauncherProps) {
 
       {/* All pins */}
       <FeedbackPinLayer
+        key={currentPath}
         pins={pins}
         onPinClick={handlePinClick}
         onPinMoved={handlePinMoved}

@@ -82,6 +82,7 @@ For preview-only behaviour, scope them to the **Preview** environment only.
 - The form collects message (required), name and email (optional)
 - On submit, a `POST` request goes to `/api/fi-edback`
 - The route handler validates with Zod, checks rate limit, inserts into `fi_feedback` table
+- **Multi-page support**: Each page's feedback is isolated by URL — pins automatically update when navigating between pages
 - **Persistent pins**: All feedback is fetched on page load via `GET` endpoint
 - **Clickable pins**: Users can click any pin to view the message, author, and timestamp
 - **Draggable pins**: Pins can be repositioned by dragging them to a new location
@@ -91,6 +92,17 @@ For preview-only behaviour, scope them to the **Preview** environment only.
 - **i18n**: Language selector (EN/DE/GA) in bottom-right switches all UI text
 
 ## Features
+
+### Multi-Page Support
+
+Feedback is automatically scoped to individual pages. When you navigate between pages (using Next.js `<Link>` or browser navigation), the widget:
+
+- Automatically fetches and displays feedback for the current page only
+- Clears pins from the previous page
+- Works seamlessly with client-side routing (no page refresh needed)
+- Stores the full URL (`window.location.href`) including path and query parameters
+
+Each page maintains its own independent set of feedback pins. Feedback submitted on `/pricing` will only appear when viewing `/pricing`, not on `/about` or other pages.
 
 ### Persistent Pins
 
@@ -190,3 +202,67 @@ Run `SQL_MIGRATION.sql` (in the fi-edback repo) once in the Neon console to crea
 | POST returns 500   | `DATABASE_URL` not set                      | Add server-side env var               |
 | POST returns 429   | Rate limit exceeded (5 per 60s per session) | Wait 60 seconds                       |
 | Hydration error    | Old version without mounted guard           | Update to latest                      |
+
+## Testing Multi-Page Functionality
+
+To verify feedback isolation across pages:
+
+1. **In the dev harness** (`dev/` folder):
+
+   ```bash
+   cd dev
+   npm run dev
+   ```
+
+   Navigate between Home (`/`), About (`/about`), and Pricing (`/pricing`) using the links.
+
+2. **In your Next.js app**:
+   - Add feedback on one page (e.g., `/pricing`)
+   - Navigate to another page (e.g., `/about`) using Next.js `<Link>` components
+   - Verify pins from `/pricing` disappear
+   - Add feedback on `/about`
+   - Navigate back to `/pricing` — only pricing feedback should appear
+   - Test browser back/forward buttons to ensure feedback refreshes correctly
+
+3. **What to verify**:
+   - Pins are isolated by full URL (including query params)
+   - Client-side navigation (Next.js `<Link>`) triggers refetch
+   - Browser back/forward buttons work correctly
+   - Each page loads only its own feedback from the database
+
+## Exporting Feedback
+
+All feedback is stored in a shared Neon PostgreSQL database. To export feedback for analysis or reporting:
+
+### Quick Export (Neon Console)
+
+1. Go to https://console.neon.tech
+2. Select your database → SQL Editor
+3. Run this query (replace `YOUR_PROJECT_SLUG`):
+
+```sql
+SELECT
+  f.page_url,
+  f.message,
+  f.name,
+  f.email,
+  f.created_at,
+  COUNT(r.id) AS reactions
+FROM fi_feedback f
+LEFT JOIN fi_feedback_reactions r ON f.id = r.feedback_id
+WHERE f.project_slug = 'YOUR_PROJECT_SLUG'
+GROUP BY f.id, f.page_url, f.message, f.name, f.email, f.created_at
+ORDER BY f.created_at DESC;
+```
+
+4. Copy results to Excel/Google Sheets
+
+### Advanced Export Queries
+
+See [`docs/EXPORT.md`](../docs/EXPORT.md) for:
+
+- CSV export with psql
+- Page-by-page summaries
+- Reaction details
+- Time-based filtering (last 7 days, etc.)
+- Full schema examples

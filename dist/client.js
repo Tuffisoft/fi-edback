@@ -767,19 +767,45 @@ function FeedbackLauncher({ projectSlug }) {
     null
   );
   const [isLoading, setIsLoading] = useState4(true);
+  const [currentPath, setCurrentPath] = useState4("");
   const t = getTranslations(language);
   useEffect3(() => {
+    let lastPath = window.location.href;
+    setCurrentPath(lastPath);
+    const checkUrlChange = () => {
+      const newPath = window.location.href;
+      if (newPath !== lastPath) {
+        lastPath = newPath;
+        setCurrentPath(newPath);
+      }
+    };
+    const intervalId = setInterval(checkUrlChange, 100);
+    const handlePopState = () => {
+      checkUrlChange();
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, []);
+  useEffect3(() => {
+    if (!currentPath) return;
     async function fetchFeedback() {
+      setIsLoading(true);
+      console.log("[fi-edback] Fetching feedback for:", currentPath);
       try {
         const sessionId = getOrCreateSessionId();
         const params = new URLSearchParams({
           projectSlug,
-          pageUrl: window.location.href,
+          pageUrl: currentPath,
           sessionId
         });
         const res = await fetch(`${API_PATH}?${params}`);
         if (res.ok) {
           const data = await res.json();
+          console.log("[fi-edback] Received feedback:", data.feedback.length, "items");
+          console.log("[fi-edback] URLs:", data.feedback.map((f) => f.pageUrl));
           setFullFeedback(data.feedback);
           setPins(data.feedback.map((f) => ({ id: f.id, x: f.x, y: f.y })));
         }
@@ -790,7 +816,7 @@ function FeedbackLauncher({ projectSlug }) {
       }
     }
     fetchFeedback();
-  }, [projectSlug]);
+  }, [projectSlug, currentPath]);
   function handleActivate() {
     setIsActive(true);
     setSelectedFeedbackId(null);
@@ -1016,7 +1042,8 @@ function FeedbackLauncher({ projectSlug }) {
         onPinClick: handlePinClick,
         onPinMoved: handlePinMoved,
         title: t.feedbackSubmitted
-      }
+      },
+      currentPath
     ),
     pendingPin && /* @__PURE__ */ jsx5(
       FeedbackForm,

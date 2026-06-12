@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function DevPage() {
   return (
     <main
@@ -9,6 +11,25 @@ export default function DevPage() {
         color: "#18181b",
       }}
     >
+      <nav style={{ marginBottom: "32px" }}>
+        <Link
+          href="/about"
+          style={{
+            color: "#3b82f6",
+            textDecoration: "none",
+            marginRight: "16px",
+          }}
+        >
+          About →
+        </Link>
+        <Link
+          href="/pricing"
+          style={{ color: "#3b82f6", textDecoration: "none" }}
+        >
+          Pricing →
+        </Link>
+      </nav>
+
       <h1 style={{ fontSize: "28px", fontWeight: "700", marginBottom: "16px" }}>
         fi-edback dev harness
       </h1>
@@ -36,11 +57,36 @@ export default function DevPage() {
         </code>
         .
       </p>
+
+      <div
+        style={{
+          backgroundColor: "#fef3c7",
+          border: "1px solid #fbbf24",
+          padding: "16px",
+          borderRadius: "8px",
+          marginBottom: "24px",
+        }}
+      >
+        <h2
+          style={{ fontSize: "16px", fontWeight: "600", marginBottom: "8px" }}
+        >
+          🧪 Testing Multi-Page Feedback
+        </h2>
+        <p style={{ fontSize: "14px", lineHeight: "1.6", color: "#78716c" }}>
+          Use the links above to navigate between Home, About, and Pricing.
+          Feedback submitted on each page should stay isolated — pins won't
+          follow you between pages.
+        </p>
+      </div>
+
       <ol style={{ lineHeight: "2", color: "#52525b" }}>
         <li>Click the Feedback button to enter feedback mode.</li>
         <li>Click anywhere on this page to place a pin.</li>
         <li>Fill in the form and submit.</li>
-        <li>Check your Neon database — a row should appear in fi_feedback.</li>
+        <li>Navigate to About or Pricing — your Home pin should disappear.</li>
+        <li>
+          Add feedback on other pages and navigate back to verify isolation.
+        </li>
       </ol>
 
       {/* Extra page height so you can test scroll-aware coordinate capture */}

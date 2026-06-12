@@ -4,6 +4,7 @@ Floating visual feedback widget for Next.js preview deployments. Clients click a
 
 **Features**:
 
+- ✅ Multi-page support — feedback automatically isolated by URL
 - ✅ Persistent pins — all feedback visible to everyone
 - ✅ Clickable pins — view message, author, and timestamp
 - ✅ Draggable pins — reposition feedback with mouse or touch
@@ -12,6 +13,7 @@ Floating visual feedback widget for Next.js preview deployments. Clients click a
 - ✅ IP tracking — automatic fallback identifier
 - ✅ i18n — EN/DE/GA language toggle with visual active state
 - ✅ Mobile-friendly — touch support for dragging, responsive UI
+- ✅ Export-ready — simple SQL queries to download all feedback
 
 ---
 
@@ -153,3 +155,53 @@ cp node_modules/fi-edback/.github/instructions/fi-edback-usage.instructions.md .
 | POST returns 500   | `DATABASE_URL` not set                      | Add server-side env var               |
 | POST returns 429   | Rate limit exceeded (5 per 60s per session) | Wait 60 seconds                       |
 | Hydration error    | Old version without mounted guard           | `npm update fi-edback`                |
+
+---
+
+## Multi-Page Support
+
+Feedback is automatically scoped to individual pages by URL. When users navigate between pages:
+
+- The widget detects URL changes (Next.js routing and browser navigation)
+- Pins automatically refresh to show only the current page's feedback
+- Each page maintains its own independent feedback
+
+**To test:**
+
+1. Run the dev harness: `cd dev && npm run dev`
+2. Navigate between Home (`/`), About (`/about`), and Pricing (`/pricing`)
+3. Add feedback on each page and verify pins stay isolated
+
+See `.github/instructions/fi-edback-usage.instructions.md` for detailed testing steps.
+
+---
+
+## Exporting Feedback
+
+All feedback is stored in the shared Neon database. To export for analysis or reporting:
+
+### Quick Export (Neon Console)
+
+```sql
+SELECT
+  f.page_url,
+  f.message,
+  f.name,
+  f.email,
+  f.created_at,
+  COUNT(r.id) AS reactions
+FROM fi_feedback f
+LEFT JOIN fi_feedback_reactions r ON f.id = r.feedback_id
+WHERE f.project_slug = 'YOUR_PROJECT_SLUG'
+GROUP BY f.id, f.page_url, f.message, f.name, f.email, f.created_at
+ORDER BY f.created_at DESC;
+```
+
+Replace `YOUR_PROJECT_SLUG` with your actual slug, then copy results to Excel/Google Sheets.
+
+**See [`docs/EXPORT.md`](docs/EXPORT.md) for:**
+
+- CSV export with psql
+- Page-by-page summaries
+- Reaction breakdowns
+- Time-based filtering (last 7 days, etc.)
