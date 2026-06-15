@@ -7,6 +7,7 @@ import {
   deleteFeedback,
   toggleReaction,
   updateFeedbackPosition,
+  exportFeedbackAsCSV,
 } from "../lib/db/queries";
 
 type RouteHandler = (request: Request) => Promise<Response>;
@@ -51,7 +52,59 @@ export function createFeedbackRouteHandler(): {
     const projectSlug = url.searchParams.get("projectSlug");
     const pageUrl = url.searchParams.get("pageUrl");
     const sessionId = url.searchParams.get("sessionId") || "";
+    const format = url.searchParams.get("format");
 
+    // CSV export endpoint
+    if (format === "csv") {
+      if (!projectSlug) {
+        return Response.json(
+          { error: "Missing projectSlug query parameter" },
+          { status: 400 },
+        );
+      }
+
+      const sql = await getNeonClient(databaseUrl);
+
+      try {
+        const { headers, rows } = await exportFeedbackAsCSV(sql, projectSlug);
+
+        // Helper to escape and quote CSV values - accepts any type
+        const escapeCSV = (value: any): string => {
+          // Convert everything to string, handle null/undefined
+          const strValue = String(value ?? "");
+          // Escape existing double quotes by doubling them
+          const escaped = strValue.replace(/"/g, '""');
+          // Always wrap in double quotes
+          return `"${escaped}"`;
+        };
+
+        // Generate CSV content with Windows line endings for Excel compatibility
+        const csvLines = [
+          headers.map(escapeCSV).join(","),
+          ...rows.map((row) => row.map(escapeCSV).join(",")),
+        ];
+
+        // Add UTF-8 BOM and sep directive for Excel compatibility (especially German/European locales)
+        const csvContent = "\uFEFF" + "sep=,\r\n" + csvLines.join("\r\n");
+
+        // Return CSV file
+        return new Response(csvContent, {
+          status: 200,
+          headers: {
+            "Content-Type": "text/csv; charset=utf-8",
+            "Content-Disposition": `attachment; filename="feedback-${projectSlug}-${new Date().toISOString().split("T")[0]}.csv"`,
+          },
+        });
+      } catch (error) {
+        console.error("[fi-edback] Export error:", error);
+        return Response.json(
+          { error: "Failed to export feedback" },
+          { status: 500 },
+        );
+      }
+    }
+
+    // Standard feedback fetch endpoint
     if (!projectSlug || !pageUrl) {
       return Response.json(
         { error: "Missing projectSlug or pageUrl query parameter" },
@@ -131,6 +184,9 @@ export function createFeedbackRouteHandler(): {
         sessionId: parsed.data.sessionId,
         userAgent: request.headers.get("user-agent") ?? undefined,
         ipAddress: getIpAddress(request),
+        pinColor: parsed.data.pinColor,
+        viewportWidth: parsed.data.viewportWidth,
+        deviceType: parsed.data.deviceType,
       });
 
       return Response.json({ feedback });

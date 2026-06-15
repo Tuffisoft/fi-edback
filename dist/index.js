@@ -14,7 +14,13 @@ function getFeedbackSchema() {
     sessionId: z.string().min(1).max(128),
     userAgent: z.string().max(500).optional(),
     // Honeypot field — must be an empty string; bots fill it in
-    website: z.literal("")
+    website: z.literal(""),
+    // Pin color (hex code)
+    pinColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Must be a valid hex color code").optional(),
+    // Viewport width for responsive positioning
+    viewportWidth: z.number().int().positive().optional(),
+    // Device type for filtering
+    deviceType: z.enum(["mobile", "tablet", "desktop"]).optional()
   });
 }
 
@@ -46,7 +52,10 @@ async function insertFeedback(sql, payload) {
       email,
       session_id,
       user_agent,
-      ip_address
+      ip_address,
+      pin_color,
+      viewport_width,
+      device_type
     ) VALUES (
       ${payload.projectSlug},
       ${payload.pageUrl},
@@ -57,7 +66,10 @@ async function insertFeedback(sql, payload) {
       ${payload.email ?? null},
       ${payload.sessionId},
       ${payload.userAgent ?? null},
-      ${payload.ipAddress ?? null}
+      ${payload.ipAddress ?? null},
+      ${payload.pinColor ?? "#3b82f6"},
+      ${payload.viewportWidth ?? null},
+      ${payload.deviceType ?? null}
     )
     RETURNING
       id,
@@ -71,6 +83,9 @@ async function insertFeedback(sql, payload) {
       session_id as "sessionId",
       user_agent as "userAgent",
       ip_address as "ipAddress",
+      pin_color as "pinColor",
+      viewport_width as "viewportWidth",
+      device_type as "deviceType",
       created_at as "createdAt"
   `;
   const row = rows[0];
@@ -93,6 +108,9 @@ async function getFeedbackForPage(sql, projectSlug, pageUrl, sessionId) {
       session_id as "sessionId",
       user_agent as "userAgent",
       ip_address as "ipAddress",
+      pin_color as "pinColor",
+      viewport_width as "viewportWidth",
+      device_type as "deviceType",
       created_at as "createdAt"
     FROM fi_feedback
     WHERE project_slug = ${projectSlug}
@@ -198,6 +216,61 @@ async function updateFeedbackPosition(sql, feedbackId, x, y) {
   `;
   return true;
 }
+async function exportFeedbackAsCSV(sql, projectSlug) {
+  const result = await sql`
+    SELECT
+      f.id,
+      f.page_url,
+      f.message,
+      f.name,
+      f.email,
+      f.x,
+      f.y,
+      f.pin_color,
+      f.viewport_width,
+      f.device_type,
+      f.ip_address,
+      f.created_at,
+      STRING_AGG(DISTINCT r.reaction, '; ') AS reactions
+    FROM fi_feedback f
+    LEFT JOIN fi_feedback_reactions r ON f.id = r.feedback_id
+    WHERE f.project_slug = ${projectSlug}
+    GROUP BY f.id, f.page_url, f.message, f.name, f.email, f.x, f.y,
+             f.pin_color, f.viewport_width, f.device_type, f.ip_address, f.created_at
+    ORDER BY f.created_at DESC
+  `;
+  const headers = [
+    "ID",
+    "Page URL",
+    "Message",
+    "Name",
+    "Email",
+    "X Position",
+    "Y Position",
+    "Pin Color",
+    "Viewport Width",
+    "Device Type",
+    "IP Address",
+    "Created At",
+    "Reactions"
+  ];
+  const rows = result.map((row) => [
+    row.id,
+    row.page_url,
+    row.message,
+    row.name || "",
+    row.email || "",
+    row.x.toString(),
+    row.y.toString(),
+    row.pin_color || "",
+    row.viewport_width?.toString() || "",
+    row.device_type || "",
+    row.ip_address || "",
+    new Date(row.created_at).toISOString(),
+    row.reactions || ""
+  ]);
+  return { headers, rows };
+}
 
 // src/server/route-handler.ts
 function getIpAddress(request) {
@@ -218,6 +291,42 @@ function createFeedbackRouteHandler() {
     const projectSlug = url.searchParams.get("projectSlug");
     const pageUrl = url.searchParams.get("pageUrl");
     const sessionId = url.searchParams.get("sessionId") || "";
+    const format = url.searchParams.get("format");
+    if (format === "csv") {
+      if (!projectSlug) {
+        return Response.json(
+          { error: "Missing projectSlug query parameter" },
+          { status: 400 }
+        );
+      }
+      const sql2 = await getNeonClient(databaseUrl);
+      try {
+        const { headers, rows } = await exportFeedbackAsCSV(sql2, projectSlug);
+        const escapeCSV = (value) => {
+          const strValue = String(value ?? "");
+          const escaped = strValue.replace(/"/g, '""');
+          return `"${escaped}"`;
+        };
+        const csvLines = [
+          headers.map(escapeCSV).join(","),
+          ...rows.map((row) => row.map(escapeCSV).join(","))
+        ];
+        const csvContent = "\uFEFFsep=,\r\n" + csvLines.join("\r\n");
+        return new Response(csvContent, {
+          status: 200,
+          headers: {
+            "Content-Type": "text/csv; charset=utf-8",
+            "Content-Disposition": `attachment; filename="feedback-${projectSlug}-${(/* @__PURE__ */ new Date()).toISOString().split("T")[0]}.csv"`
+          }
+        });
+      } catch (error) {
+        console.error("[fi-edback] Export error:", error);
+        return Response.json(
+          { error: "Failed to export feedback" },
+          { status: 500 }
+        );
+      }
+    }
     if (!projectSlug || !pageUrl) {
       return Response.json(
         { error: "Missing projectSlug or pageUrl query parameter" },
@@ -285,7 +394,10 @@ function createFeedbackRouteHandler() {
         email: parsed.data.email || void 0,
         sessionId: parsed.data.sessionId,
         userAgent: request.headers.get("user-agent") ?? void 0,
-        ipAddress: getIpAddress(request)
+        ipAddress: getIpAddress(request),
+        pinColor: parsed.data.pinColor,
+        viewportWidth: parsed.data.viewportWidth,
+        deviceType: parsed.data.deviceType
       });
       return Response.json({ feedback });
     } catch (error) {

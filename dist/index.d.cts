@@ -29,6 +29,12 @@ interface FeedbackPayload {
     sessionId: string;
     userAgent?: string;
     ipAddress?: string;
+    /** Hex color code for pin (e.g., #3b82f6) */
+    pinColor?: string;
+    /** Viewport width when feedback was submitted */
+    viewportWidth?: number;
+    /** Device type: mobile, tablet, or desktop */
+    deviceType?: "mobile" | "tablet" | "desktop";
 }
 interface FeedbackConfig {
     apiPath?: string;

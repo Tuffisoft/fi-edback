@@ -30,7 +30,7 @@ export const { GET, POST, PATCH, DELETE } = createFeedbackRouteHandler();
 Provides four endpoints:
 
 - `POST` — submit new feedback
-- `GET` — fetch existing feedback for a page (query params: `projectSlug`, `pageUrl`, `sessionId`)
+- `GET` — fetch existing feedback for a page (query params: `projectSlug`, `pageUrl`, `sessionId`) OR export as CSV (query params: `format=csv`, `projectSlug`)
 - `PATCH` — toggle a reaction on feedback (body: `feedbackId`, `reaction`, `sessionId`) OR update pin position (body: `feedbackId`, `x`, `y`)
 - `DELETE` — delete feedback by ID (query param: `id`)
 
@@ -147,6 +147,32 @@ Supported languages:
 - **DE** (Deutsch/German)
 - **GA** (Gaeilge/Irish)
 
+### Pin Colors
+
+Users can choose from 5 color options when placing feedback:
+
+- 🔵 **Blue** (#3b82f6) - Default/general feedback
+- 🟢 **Green** (#22c55e) - Positive feedback/suggestions
+- 🟡 **Yellow** (#eab308) - Questions
+- 🔴 **Red** (#ef4444) - Issues/bugs
+- 🟣 **Purple** (#a855f7) - Design feedback
+
+The selected color is displayed on the pin and saved with the feedback. This allows teams to categorize feedback visually at a glance.
+
+### CSV Export
+
+Click the **📥 Export CSV** button (bottom-right, next to language toggle) to download all feedback for the current project as a CSV file. The export includes:
+
+- All feedback fields (message, name, email, coordinates)
+- Pin color selections
+- Device type (mobile/tablet/desktop)
+- Viewport dimensions
+- IP addresses
+- Aggregated reactions
+- Timestamps
+
+The CSV is automatically formatted for Excel compatibility (including German/European locales using semicolon delimiters).
+
 ### Reactions
 
 Users can react to any feedback with predefined emojis:
@@ -163,6 +189,46 @@ Click a reaction to toggle it on/off. Reaction counts are shown next to each emo
 
 Remove `NEXT_PUBLIC_ENABLE_FEEDBACK` from the Production environment in Vercel —
 the widget renders nothing and no requests are made. No code changes needed.
+
+The instruction text also indicates this is a **preview-only tool** to communicate with users that it won't appear in production.
+
+## Optional: Security Middleware
+
+For stricter CORS protection, add `middleware.ts` to your app root:
+
+```typescript
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+
+const ALLOWED_ORIGINS = [
+  process.env.NEXT_PUBLIC_SITE_URL,
+  /^https:\/\/.*\.vercel\.app$/,
+  "http://localhost:3000",
+].filter(Boolean);
+
+export function middleware(request: NextRequest) {
+  if (!request.nextUrl.pathname.startsWith("/api/fi-edback")) {
+    return NextResponse.next();
+  }
+
+  const origin = request.headers.get("origin");
+  const isAllowed =
+    !origin ||
+    ALLOWED_ORIGINS.some((allowed) =>
+      typeof allowed === "string" ? allowed === origin : allowed.test(origin),
+    );
+
+  if (!isAllowed) {
+    return NextResponse.json({ error: "Origin not allowed" }, { status: 403 });
+  }
+
+  return NextResponse.next();
+}
+
+export const config = { matcher: "/api/fi-edback/:path*" };
+```
+
+**Note:** The route handler already includes built-in security (rate limiting, honeypot, input validation). Middleware is optional.
 
 ## Upgrade
 
@@ -182,6 +248,9 @@ Run `SQL_MIGRATION.sql` (in the fi-edback repo) once in the Neon console to crea
 
 - `id`, `project_slug`, `page_url`, `x`, `y`, `message`
 - `name`, `email` (optional user-provided fields)
+- `pin_color` (hex color code, default #3b82f6)
+- `viewport_width` (captured at submission)
+- `device_type` (mobile/tablet/desktop)
 - `session_id` (anonymous session cookie for rate limiting)
 - `user_agent`, `ip_address` (auto-captured from request headers)
 - `created_at` (timestamp)

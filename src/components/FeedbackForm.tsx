@@ -14,11 +14,21 @@ interface FeedbackFormProps {
   projectSlug: string;
   apiPath: string;
   language: Language;
+  viewportWidth: number;
+  deviceType: "mobile" | "tablet" | "desktop";
   onSubmitted: (feedback: FeedbackRow) => void;
   onCancelled: () => void;
 }
 
 type Status = "idle" | "submitting" | "success" | "error";
+
+const PIN_COLORS = [
+  { value: "#3b82f6", label: "Blue" },
+  { value: "#22c55e", label: "Green" },
+  { value: "#eab308", label: "Yellow" },
+  { value: "#ef4444", label: "Red" },
+  { value: "#a855f7", label: "Purple" },
+] as const;
 
 export function FeedbackForm({
   x,
@@ -26,12 +36,15 @@ export function FeedbackForm({
   projectSlug,
   apiPath,
   language,
+  viewportWidth,
+  deviceType,
   onSubmitted,
   onCancelled,
 }: FeedbackFormProps) {
   const [message, setMessage] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [pinColor, setPinColor] = useState("#3b82f6"); // Default blue
   const [website, setWebsite] = useState(""); // honeypot — always stays empty for real users
   const [status, setStatus] = useState<Status>("idle");
   const [errorText, setErrorText] = useState("");
@@ -62,6 +75,9 @@ export function FeedbackForm({
       email: email || undefined,
       sessionId,
       website, // honeypot
+      viewportWidth,
+      deviceType,
+      pinColor,
     };
 
     try {
@@ -189,6 +205,59 @@ export function FeedbackForm({
               tabIndex={-1}
               autoComplete="off"
             />
+          </div>
+
+          {/* Color picker */}
+          <div style={{ marginBottom: "12px" }}>
+            <div
+              style={{
+                fontSize: "12px",
+                color: "#71717a",
+                marginBottom: "6px",
+                fontWeight: "500",
+              }}
+            >
+              {t.pinColor}
+            </div>
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+              {PIN_COLORS.map((color) => (
+                <button
+                  key={color.value}
+                  type="button"
+                  onClick={() => setPinColor(color.value)}
+                  aria-label={color.label}
+                  title={color.label}
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "50%",
+                    backgroundColor: color.value,
+                    border:
+                      pinColor === color.value
+                        ? "3px solid #18181b"
+                        : "2px solid #e4e4e7",
+                    cursor: "pointer",
+                    boxShadow:
+                      pinColor === color.value
+                        ? "0 2px 8px rgba(0,0,0,0.2)"
+                        : "0 1px 3px rgba(0,0,0,0.1)",
+                    transition: "all 0.15s ease",
+                    transform:
+                      pinColor === color.value ? "scale(1.1)" : "scale(1)",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (pinColor !== color.value) {
+                      e.currentTarget.style.transform = "scale(1.05)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (pinColor !== color.value) {
+                      e.currentTarget.style.transform = "scale(1)";
+                    }
+                  }}
+                />
+              ))}
+            </div>
           </div>
 
           <div style={{ marginBottom: "10px" }}>

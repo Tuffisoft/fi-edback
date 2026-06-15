@@ -19,6 +19,15 @@ export function getFeedbackSchema() {
     userAgent: z.string().max(500).optional(),
     // Honeypot field — must be an empty string; bots fill it in
     website: z.literal(""),
+    // Pin color (hex code)
+    pinColor: z
+      .string()
+      .regex(/^#[0-9A-Fa-f]{6}$/, "Must be a valid hex color code")
+      .optional(),
+    // Viewport width for responsive positioning
+    viewportWidth: z.number().int().positive().optional(),
+    // Device type for filtering
+    deviceType: z.enum(["mobile", "tablet", "desktop"]).optional(),
   });
 }
 

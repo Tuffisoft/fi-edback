@@ -5,7 +5,18 @@ import { getTranslations } from "../lib/i18n";
 
 interface FeedbackOverlayProps {
   language: Language;
-  onPinPlaced: (x: number, y: number) => void;
+  onPinPlaced: (
+    x: number,
+    y: number,
+    viewportWidth: number,
+    deviceType: "mobile" | "tablet" | "desktop",
+  ) => void;
+}
+
+function getDeviceType(width: number): "mobile" | "tablet" | "desktop" {
+  if (width < 768) return "mobile";
+  if (width < 1024) return "tablet";
+  return "desktop";
 }
 
 export function FeedbackOverlay({
@@ -24,7 +35,9 @@ export function FeedbackOverlay({
     // pin position is informative context, not a pixel-perfect pointer.
     const x = e.clientX + window.scrollX;
     const y = e.clientY + window.scrollY;
-    onPinPlaced(x, y);
+    const viewportWidth = window.innerWidth;
+    const deviceType = getDeviceType(viewportWidth);
+    onPinPlaced(x, y, viewportWidth, deviceType);
   }
 
   return (

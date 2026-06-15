@@ -2,7 +2,8 @@ export const translations = {
   en: {
     feedbackButton: "Feedback",
     cancelButton: "Cancel",
-    instructionText: "Click the Feedback button to leave a comment",
+    instructionText:
+      "Leave feedback (preview tool — not visible in production)",
     messagePlaceholder: "What would you like to tell us?",
     messageLabel: "Message",
     nameLabel: "Name (optional)",
@@ -18,12 +19,14 @@ export const translations = {
     by: "by",
     anonymous: "Anonymous",
     reactions: "Reactions",
+    pinColor: "Pin color",
+    exportCSV: "Export CSV",
   },
   de: {
     feedbackButton: "Feedback",
     cancelButton: "Abbrechen",
     instructionText:
-      "Klicken Sie auf die Feedback-Schaltfläche, um einen Kommentar zu hinterlassen",
+      "Feedback geben (Vorschau-Tool — nicht in Produktion sichtbar)",
     messagePlaceholder: "Was möchten Sie uns mitteilen?",
     messageLabel: "Nachricht",
     nameLabel: "Name (optional)",
@@ -39,11 +42,14 @@ export const translations = {
     by: "von",
     anonymous: "Anonym",
     reactions: "Reaktionen",
+    pinColor: "Pin-Farbe",
+    exportCSV: "CSV exportieren",
   },
   ga: {
     feedbackButton: "Aiseolas",
     cancelButton: "Cealaigh",
-    instructionText: "Cliceáil an cnaipe Aiseolas chun trácht a fhágáil",
+    instructionText:
+      "Fág aiseolas (uirlis réamhamhairc — nach bhfeicfear sa táirgeadh)",
     messagePlaceholder: "Cad ba mhaith leat a rá linn?",
     messageLabel: "Teachtaireacht",
     nameLabel: "Ainm (roghnach)",
@@ -59,6 +65,8 @@ export const translations = {
     by: "le",
     anonymous: "Gan ainm",
     reactions: "Imoibrithe",
+    pinColor: "Dath bioráin",
+    exportCSV: "Easpórtáil CSV",
   },
 } as const;
 

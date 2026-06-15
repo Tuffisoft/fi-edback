@@ -8,12 +8,15 @@ Floating visual feedback widget for Next.js preview deployments. Clients click a
 - ✅ Persistent pins — all feedback visible to everyone
 - ✅ Clickable pins — view message, author, and timestamp
 - ✅ Draggable pins — reposition feedback with mouse or touch
+- ✅ Color-coded pins — 5 colors to categorize feedback visually
+- ✅ Device tracking — capture viewport size and device type
+- ✅ Cross-device filtering — toggle pins from different screen sizes
 - ✅ Reactions — engage with feedback using emojis (👍 ✅ ❤️ 🔥 👀)
 - ✅ Delete feedback — anyone can delete (no auth)
 - ✅ IP tracking — automatic fallback identifier
+- ✅ CSV export — one-click download with German Excel compatibility
 - ✅ i18n — EN/DE/GA language toggle with visual active state
 - ✅ Mobile-friendly — touch support for dragging, responsive UI
-- ✅ Export-ready — simple SQL queries to download all feedback
 
 ---
 

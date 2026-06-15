@@ -15,6 +15,9 @@ interface Pin {
   id: string;
   x: number;
   y: number;
+  viewportWidth?: number;
+  deviceType?: "mobile" | "tablet" | "desktop";
+  pinColor?: string;
 }
 
 interface FeedbackLauncherProps {
@@ -26,16 +29,33 @@ export function FeedbackLauncher({ projectSlug }: FeedbackLauncherProps) {
   const [isActive, setIsActive] = useState(false);
   const [pins, setPins] = useState<Pin[]>([]);
   const [fullFeedback, setFullFeedback] = useState<FeedbackRow[]>([]);
-  const [pendingPin, setPendingPin] = useState<{ x: number; y: number } | null>(
-    null,
-  );
+  const [pendingPin, setPendingPin] = useState<{
+    x: number;
+    y: number;
+    viewportWidth: number;
+    deviceType: "mobile" | "tablet" | "desktop";
+  } | null>(null);
   const [selectedFeedbackId, setSelectedFeedbackId] = useState<string | null>(
     null,
   );
   const [isLoading, setIsLoading] = useState(true);
   const [currentPath, setCurrentPath] = useState<string>("");
+  const [showCrossDevicePins, setShowCrossDevicePins] = useState(true);
+  const [currentViewportWidth, setCurrentViewportWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 1024,
+  );
+  const [isExporting, setIsExporting] = useState(false);
 
   const t = getTranslations(language);
+
+  // Track viewport width changes
+  useEffect(() => {
+    const handleResize = () => {
+      setCurrentViewportWidth(window.innerWidth);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Track URL changes for client-side navigation
   // Uses polling + event listeners for maximum compatibility with Next.js routing
@@ -85,10 +105,26 @@ export function FeedbackLauncher({ projectSlug }: FeedbackLauncherProps) {
         const res = await fetch(`${API_PATH}?${params}`);
         if (res.ok) {
           const data = (await res.json()) as { feedback: FeedbackRow[] };
-          console.log("[fi-edback] Received feedback:", data.feedback.length, "items");
-          console.log("[fi-edback] URLs:", data.feedback.map(f => f.pageUrl));
+          console.log(
+            "[fi-edback] Received feedback:",
+            data.feedback.length,
+            "items",
+          );
+          console.log(
+            "[fi-edback] URLs:",
+            data.feedback.map((f) => f.pageUrl),
+          );
           setFullFeedback(data.feedback);
-          setPins(data.feedback.map((f) => ({ id: f.id, x: f.x, y: f.y })));
+          setPins(
+            data.feedback.map((f) => ({
+              id: f.id,
+              x: f.x,
+              y: f.y,
+              viewportWidth: f.viewportWidth,
+              deviceType: f.deviceType,
+              pinColor: f.pinColor,
+            })),
+          );
         }
       } catch (error) {
         console.error("[fi-edback] Failed to fetch feedback:", error);
@@ -109,18 +145,56 @@ export function FeedbackLauncher({ projectSlug }: FeedbackLauncherProps) {
     setPendingPin(null);
   }
 
-  function handlePinPlaced(x: number, y: number) {
+  function handlePinPlaced(
+    x: number,
+    y: number,
+    viewportWidth: number,
+    deviceType: "mobile" | "tablet" | "desktop",
+  ) {
     setIsActive(false);
-    setPendingPin({ x, y });
+    setPendingPin({ x, y, viewportWidth, deviceType });
   }
 
   function handleFormSubmitted(feedback: FeedbackRow) {
     setPins((prev) => [
       ...prev,
-      { id: feedback.id, x: feedback.x, y: feedback.y },
+      {
+        id: feedback.id,
+        x: feedback.x,
+        y: feedback.y,
+        viewportWidth: feedback.viewportWidth,
+        deviceType: feedback.deviceType,
+        pinColor: feedback.pinColor,
+      },
     ]);
     setFullFeedback((prev) => [...prev, feedback]);
     setPendingPin(null);
+  }
+
+  async function handleExportCSV() {
+    setIsExporting(true);
+    try {
+      const response = await fetch(
+        `${API_PATH}?format=csv&projectSlug=${encodeURIComponent(projectSlug)}`,
+      );
+      if (!response.ok) {
+        throw new Error("Export failed");
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `feedback-${projectSlug}-${new Date().toISOString().split("T")[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error("Export error:", error);
+      alert("Failed to export feedback");
+    } finally {
+      setIsExporting(false);
+    }
   }
 
   function handleFormCancelled() {
@@ -224,19 +298,57 @@ export function FeedbackLauncher({ projectSlug }: FeedbackLauncherProps) {
     (f) => f.id === selectedFeedbackId,
   );
 
+  // Filter pins based on cross-device toggle
+  const visiblePins = showCrossDevicePins
+    ? pins
+    : pins.filter((pin) => {
+        if (!pin.viewportWidth || !currentViewportWidth) return true;
+        const diff = Math.abs(pin.viewportWidth - currentViewportWidth);
+        return diff <= 300; // Show pins from similar viewport sizes (within 300px)
+      });
+
   // Responsive values based on screen width
   const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
 
   return (
     <>
+      {/* Export CSV button */}
+      {!isActive && !pendingPin && (
+        <button
+          onClick={handleExportCSV}
+          disabled={isExporting}
+          aria-label="Export feedback as CSV"
+          style={{
+            position: "fixed",
+            bottom: isMobile ? "90px" : "24px",
+            right: isMobile ? "12px" : "380px",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            border: "1px solid #e4e4e7",
+            borderRadius: "6px",
+            padding: isMobile ? "8px 14px" : "6px 12px",
+            fontSize: isMobile ? "13px" : "12px",
+            fontWeight: "500",
+            color: isExporting ? "#71717a" : "#18181b",
+            cursor: isExporting ? "not-allowed" : "pointer",
+            fontFamily: "system-ui, sans-serif",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+            transition: "all 0.15s ease",
+            opacity: isExporting ? 0.6 : 1,
+          }}
+        >
+          {isExporting ? "📥 ..." : `📥 ${t.exportCSV}`}
+        </button>
+      )}
+
       {/* Language toggle */}
       {!isActive && !pendingPin && (
         <div
           style={{
             position: "fixed",
             bottom: isMobile ? "90px" : "24px",
-            right: isMobile ? "12px" : "140px",
-            zIndex: 9998,
+            right: isMobile ? "12px" : "240px",
+            zIndex: 9999,
             display: "flex",
             gap: "4px",
             backgroundColor: "#fff",
@@ -268,6 +380,39 @@ export function FeedbackLauncher({ projectSlug }: FeedbackLauncherProps) {
             </button>
           ))}
         </div>
+      )}
+
+      {/* Cross-device filter toggle */}
+      {!isActive && !pendingPin && pins.some((p) => p.viewportWidth) && (
+        <button
+          onClick={() => setShowCrossDevicePins(!showCrossDevicePins)}
+          aria-label={
+            showCrossDevicePins ? "Hide cross-device pins" : "Show all pins"
+          }
+          title={
+            showCrossDevicePins
+              ? "Hide pins from other devices"
+              : "Show all pins"
+          }
+          style={{
+            position: "fixed",
+            bottom: isMobile ? "90px" : "24px",
+            right: isMobile ? "12px" : "140px",
+            zIndex: 9999,
+            padding: isMobile ? "8px 12px" : "6px 10px",
+            fontSize: isMobile ? "20px" : "18px",
+            backgroundColor: "#fff",
+            border: "1px solid #e4e4e7",
+            borderRadius: "6px",
+            cursor: "pointer",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+            fontFamily: "system-ui, sans-serif",
+            opacity: showCrossDevicePins ? 1 : 0.5,
+            transition: "opacity 0.2s ease",
+          }}
+        >
+          {showCrossDevicePins ? "👁️" : "🚫"}
+        </button>
       )}
 
       {/* Feedback button */}
@@ -355,10 +500,11 @@ export function FeedbackLauncher({ projectSlug }: FeedbackLauncherProps) {
       {/* All pins */}
       <FeedbackPinLayer
         key={currentPath}
-        pins={pins}
+        pins={visiblePins}
         onPinClick={handlePinClick}
         onPinMoved={handlePinMoved}
         title={t.feedbackSubmitted}
+        currentViewportWidth={currentViewportWidth}
       />
 
       {/* Form for new feedback */}
@@ -369,6 +515,8 @@ export function FeedbackLauncher({ projectSlug }: FeedbackLauncherProps) {
           projectSlug={projectSlug}
           apiPath={API_PATH}
           language={language}
+          viewportWidth={pendingPin.viewportWidth}
+          deviceType={pendingPin.deviceType}
           onSubmitted={handleFormSubmitted}
           onCancelled={handleFormCancelled}
         />

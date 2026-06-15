@@ -181,6 +181,30 @@ export function FeedbackPopup({
               },
             )}
           </div>
+          {/* Device info */}
+          {feedback.deviceType && feedback.viewportWidth && (
+            <div style={{ marginTop: "4px", opacity: 0.8 }}>
+              {feedback.deviceType === "mobile" && "📱"}
+              {feedback.deviceType === "tablet" && "📱"}
+              {feedback.deviceType === "desktop" && "💻"} {feedback.deviceType}{" "}
+              ({feedback.viewportWidth}px)
+              {feedback.pinColor && (
+                <span
+                  style={{
+                    display: "inline-block",
+                    width: "12px",
+                    height: "12px",
+                    borderRadius: "50%",
+                    backgroundColor: feedback.pinColor,
+                    border: "1px solid #e4e4e7",
+                    marginLeft: "6px",
+                    verticalAlign: "middle",
+                  }}
+                  title={`Pin color: ${feedback.pinColor}`}
+                />
+              )}
+            </div>
+          )}
         </div>
 
         {/* Message */}

@@ -36,7 +36,7 @@ var translations = {
   en: {
     feedbackButton: "Feedback",
     cancelButton: "Cancel",
-    instructionText: "Click the Feedback button to leave a comment",
+    instructionText: "Leave feedback (preview tool \u2014 not visible in production)",
     messagePlaceholder: "What would you like to tell us?",
     messageLabel: "Message",
     nameLabel: "Name (optional)",
@@ -51,12 +51,14 @@ var translations = {
     deleteFeedback: "Delete feedback",
     by: "by",
     anonymous: "Anonymous",
-    reactions: "Reactions"
+    reactions: "Reactions",
+    pinColor: "Pin color",
+    exportCSV: "Export CSV"
   },
   de: {
     feedbackButton: "Feedback",
     cancelButton: "Abbrechen",
-    instructionText: "Klicken Sie auf die Feedback-Schaltfl\xE4che, um einen Kommentar zu hinterlassen",
+    instructionText: "Feedback geben (Vorschau-Tool \u2014 nicht in Produktion sichtbar)",
     messagePlaceholder: "Was m\xF6chten Sie uns mitteilen?",
     messageLabel: "Nachricht",
     nameLabel: "Name (optional)",
@@ -71,12 +73,14 @@ var translations = {
     deleteFeedback: "Feedback l\xF6schen",
     by: "von",
     anonymous: "Anonym",
-    reactions: "Reaktionen"
+    reactions: "Reaktionen",
+    pinColor: "Pin-Farbe",
+    exportCSV: "CSV exportieren"
   },
   ga: {
     feedbackButton: "Aiseolas",
     cancelButton: "Cealaigh",
-    instructionText: "Clice\xE1il an cnaipe Aiseolas chun tr\xE1cht a fh\xE1g\xE1il",
+    instructionText: "F\xE1g aiseolas (uirlis r\xE9amhamhairc \u2014 nach bhfeicfear sa t\xE1irgeadh)",
     messagePlaceholder: "Cad ba mhaith leat a r\xE1 linn?",
     messageLabel: "Teachtaireacht",
     nameLabel: "Ainm (roghnach)",
@@ -91,7 +95,9 @@ var translations = {
     deleteFeedback: "Scrios aiseolas",
     by: "le",
     anonymous: "Gan ainm",
-    reactions: "Imoibrithe"
+    reactions: "Imoibrithe",
+    pinColor: "Dath bior\xE1in",
+    exportCSV: "Easp\xF3rt\xE1il CSV"
   }
 };
 function getTranslations(lang) {
@@ -100,6 +106,11 @@ function getTranslations(lang) {
 
 // src/components/FeedbackOverlay.tsx
 var import_jsx_runtime = require("react/jsx-runtime");
+function getDeviceType(width) {
+  if (width < 768) return "mobile";
+  if (width < 1024) return "tablet";
+  return "desktop";
+}
 function FeedbackOverlay({
   language,
   onPinPlaced
@@ -108,7 +119,9 @@ function FeedbackOverlay({
   function handleClick(e) {
     const x = e.clientX + window.scrollX;
     const y = e.clientY + window.scrollY;
-    onPinPlaced(x, y);
+    const viewportWidth = window.innerWidth;
+    const deviceType = getDeviceType(viewportWidth);
+    onPinPlaced(x, y, viewportWidth, deviceType);
   }
   return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
     "div",
@@ -134,11 +147,25 @@ function FeedbackOverlay({
 // src/components/FeedbackPinLayer.tsx
 var import_react = require("react");
 var import_jsx_runtime2 = require("react/jsx-runtime");
+function getDeviceIcon(deviceType) {
+  if (!deviceType) return "\u{1F4CD}";
+  if (deviceType === "mobile") return "\u{1F4F1}";
+  if (deviceType === "tablet") return "\u{1F4F1}";
+  return "\u{1F4BB}";
+}
+function getOpacity(pinViewportWidth, currentViewportWidth) {
+  if (!pinViewportWidth || !currentViewportWidth) return 1;
+  const diff = Math.abs(pinViewportWidth - currentViewportWidth);
+  if (diff > 300) return 0.5;
+  if (diff > 150) return 0.75;
+  return 1;
+}
 function FeedbackPinLayer({
   pins,
   onPinClick,
   onPinMoved,
-  title = "Feedback submitted"
+  title = "Feedback submitted",
+  currentViewportWidth = window.innerWidth
 }) {
   const [draggingId, setDraggingId] = (0, import_react.useState)(null);
   const [dragOffset, setDragOffset] = (0, import_react.useState)({ x: 0, y: 0 });
@@ -197,52 +224,82 @@ function FeedbackPinLayer({
       setDraggingId(pin.id);
       dragStartPos.current = { x: clientX, y: clientY };
     };
-    return /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
+    const opacity = getOpacity(pin.viewportWidth, currentViewportWidth);
+    const deviceIcon = getDeviceIcon(pin.deviceType);
+    const pinTitle = pin.deviceType ? `${title} (${pin.deviceType}, ${pin.viewportWidth}px)` : title;
+    return /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)(
       "div",
       {
-        title,
-        onMouseDown: (e) => {
-          e.stopPropagation();
-          handleStart(e.clientX, e.clientY);
-        },
-        onTouchStart: (e) => {
-          e.stopPropagation();
-          const touch = e.touches[0];
-          handleStart(touch.clientX, touch.clientY);
-        },
-        onClick: (e) => {
-          if (!hasMoved.current && onPinClick) {
-            e.stopPropagation();
-            onPinClick(pin.id);
-          }
-        },
         style: {
           position: "absolute",
           left: position.x - 10,
-          top: position.y - 22,
+          top: position.y - 35,
           zIndex: isDragging ? 9998 : 9996,
-          width: "20px",
-          height: "20px",
-          borderRadius: "50% 50% 50% 0",
-          transform: isDragging ? "rotate(-45deg) scale(1.15)" : "rotate(-45deg)",
-          backgroundColor: "#18181b",
-          border: "2px solid #fff",
-          boxShadow: isDragging ? "0 8px 24px rgba(0,0,0,0.4)" : "0 2px 6px rgba(0,0,0,0.3)",
           pointerEvents: "auto",
-          cursor: isDragging ? "grabbing" : "grab",
-          transition: isDragging ? "none" : "transform 0.15s ease, box-shadow 0.15s ease",
-          userSelect: "none"
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          opacity,
+          transition: isDragging ? "none" : "opacity 0.2s ease"
         },
-        onMouseEnter: (e) => {
-          if (!isDragging) {
-            e.currentTarget.style.transform = "rotate(-45deg) scale(1.1)";
-          }
-        },
-        onMouseLeave: (e) => {
-          if (!isDragging) {
-            e.currentTarget.style.transform = "rotate(-45deg) scale(1)";
-          }
-        }
+        children: [
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
+            "div",
+            {
+              style: {
+                fontSize: "12px",
+                lineHeight: "1",
+                marginBottom: "2px",
+                userSelect: "none",
+                filter: isDragging ? "drop-shadow(0 2px 4px rgba(0,0,0,0.3))" : "none"
+              },
+              children: deviceIcon
+            }
+          ),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
+            "div",
+            {
+              title: pinTitle,
+              onMouseDown: (e) => {
+                e.stopPropagation();
+                handleStart(e.clientX, e.clientY);
+              },
+              onTouchStart: (e) => {
+                e.stopPropagation();
+                const touch = e.touches[0];
+                handleStart(touch.clientX, touch.clientY);
+              },
+              onClick: (e) => {
+                if (!hasMoved.current && onPinClick) {
+                  e.stopPropagation();
+                  onPinClick(pin.id);
+                }
+              },
+              style: {
+                width: "20px",
+                height: "20px",
+                borderRadius: "50% 50% 50% 0",
+                transform: isDragging ? "rotate(-45deg) scale(1.15)" : "rotate(-45deg)",
+                backgroundColor: pin.pinColor || "#18181b",
+                border: "2px solid #fff",
+                boxShadow: isDragging ? "0 8px 24px rgba(0,0,0,0.4)" : "0 2px 6px rgba(0,0,0,0.3)",
+                cursor: isDragging ? "grabbing" : "grab",
+                transition: isDragging ? "none" : "transform 0.15s ease, box-shadow 0.15s ease",
+                userSelect: "none"
+              },
+              onMouseEnter: (e) => {
+                if (!isDragging) {
+                  e.currentTarget.style.transform = "rotate(-45deg) scale(1.1)";
+                }
+              },
+              onMouseLeave: (e) => {
+                if (!isDragging) {
+                  e.currentTarget.style.transform = "rotate(-45deg) scale(1)";
+                }
+              }
+            }
+          )
+        ]
       },
       pin.id
     );
@@ -281,18 +338,28 @@ function getOrCreateSessionId() {
 
 // src/components/FeedbackForm.tsx
 var import_jsx_runtime3 = require("react/jsx-runtime");
+var PIN_COLORS = [
+  { value: "#3b82f6", label: "Blue" },
+  { value: "#22c55e", label: "Green" },
+  { value: "#eab308", label: "Yellow" },
+  { value: "#ef4444", label: "Red" },
+  { value: "#a855f7", label: "Purple" }
+];
 function FeedbackForm({
   x,
   y,
   projectSlug,
   apiPath,
   language,
+  viewportWidth,
+  deviceType,
   onSubmitted,
   onCancelled
 }) {
   const [message, setMessage] = (0, import_react2.useState)("");
   const [name, setName] = (0, import_react2.useState)("");
   const [email, setEmail] = (0, import_react2.useState)("");
+  const [pinColor, setPinColor] = (0, import_react2.useState)("#3b82f6");
   const [website, setWebsite] = (0, import_react2.useState)("");
   const [status, setStatus] = (0, import_react2.useState)("idle");
   const [errorText, setErrorText] = (0, import_react2.useState)("");
@@ -316,8 +383,11 @@ function FeedbackForm({
       name: name || void 0,
       email: email || void 0,
       sessionId,
-      website
+      website,
       // honeypot
+      viewportWidth,
+      deviceType,
+      pinColor
     };
     try {
       const res = await fetch(apiPath, {
@@ -428,6 +498,51 @@ function FeedbackForm({
               autoComplete: "off"
             }
           )
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { style: { marginBottom: "12px" }, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+            "div",
+            {
+              style: {
+                fontSize: "12px",
+                color: "#71717a",
+                marginBottom: "6px",
+                fontWeight: "500"
+              },
+              children: t.pinColor
+            }
+          ),
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { style: { display: "flex", gap: "8px", flexWrap: "wrap" }, children: PIN_COLORS.map((color) => /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+            "button",
+            {
+              type: "button",
+              onClick: () => setPinColor(color.value),
+              "aria-label": color.label,
+              title: color.label,
+              style: {
+                width: "32px",
+                height: "32px",
+                borderRadius: "50%",
+                backgroundColor: color.value,
+                border: pinColor === color.value ? "3px solid #18181b" : "2px solid #e4e4e7",
+                cursor: "pointer",
+                boxShadow: pinColor === color.value ? "0 2px 8px rgba(0,0,0,0.2)" : "0 1px 3px rgba(0,0,0,0.1)",
+                transition: "all 0.15s ease",
+                transform: pinColor === color.value ? "scale(1.1)" : "scale(1)"
+              },
+              onMouseEnter: (e) => {
+                if (pinColor !== color.value) {
+                  e.currentTarget.style.transform = "scale(1.05)";
+                }
+              },
+              onMouseLeave: (e) => {
+                if (pinColor !== color.value) {
+                  e.currentTarget.style.transform = "scale(1)";
+                }
+              }
+            },
+            color.value
+          )) })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { style: { marginBottom: "10px" }, children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
           "textarea",
@@ -669,7 +784,34 @@ function FeedbackPopup({
                     dateStyle: "medium",
                     timeStyle: "short"
                   }
-                ) })
+                ) }),
+                feedback.deviceType && feedback.viewportWidth && /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { style: { marginTop: "4px", opacity: 0.8 }, children: [
+                  feedback.deviceType === "mobile" && "\u{1F4F1}",
+                  feedback.deviceType === "tablet" && "\u{1F4F1}",
+                  feedback.deviceType === "desktop" && "\u{1F4BB}",
+                  " ",
+                  feedback.deviceType,
+                  " ",
+                  "(",
+                  feedback.viewportWidth,
+                  "px)",
+                  feedback.pinColor && /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+                    "span",
+                    {
+                      style: {
+                        display: "inline-block",
+                        width: "12px",
+                        height: "12px",
+                        borderRadius: "50%",
+                        backgroundColor: feedback.pinColor,
+                        border: "1px solid #e4e4e7",
+                        marginLeft: "6px",
+                        verticalAlign: "middle"
+                      },
+                      title: `Pin color: ${feedback.pinColor}`
+                    }
+                  )
+                ] })
               ]
             }
           ),
@@ -785,15 +927,25 @@ function FeedbackLauncher({ projectSlug }) {
   const [isActive, setIsActive] = (0, import_react4.useState)(false);
   const [pins, setPins] = (0, import_react4.useState)([]);
   const [fullFeedback, setFullFeedback] = (0, import_react4.useState)([]);
-  const [pendingPin, setPendingPin] = (0, import_react4.useState)(
-    null
-  );
+  const [pendingPin, setPendingPin] = (0, import_react4.useState)(null);
   const [selectedFeedbackId, setSelectedFeedbackId] = (0, import_react4.useState)(
     null
   );
   const [isLoading, setIsLoading] = (0, import_react4.useState)(true);
   const [currentPath, setCurrentPath] = (0, import_react4.useState)("");
+  const [showCrossDevicePins, setShowCrossDevicePins] = (0, import_react4.useState)(true);
+  const [currentViewportWidth, setCurrentViewportWidth] = (0, import_react4.useState)(
+    typeof window !== "undefined" ? window.innerWidth : 1024
+  );
+  const [isExporting, setIsExporting] = (0, import_react4.useState)(false);
   const t = getTranslations(language);
+  (0, import_react4.useEffect)(() => {
+    const handleResize = () => {
+      setCurrentViewportWidth(window.innerWidth);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   (0, import_react4.useEffect)(() => {
     let lastPath = window.location.href;
     setCurrentPath(lastPath);
@@ -829,10 +981,26 @@ function FeedbackLauncher({ projectSlug }) {
         const res = await fetch(`${API_PATH}?${params}`);
         if (res.ok) {
           const data = await res.json();
-          console.log("[fi-edback] Received feedback:", data.feedback.length, "items");
-          console.log("[fi-edback] URLs:", data.feedback.map((f) => f.pageUrl));
+          console.log(
+            "[fi-edback] Received feedback:",
+            data.feedback.length,
+            "items"
+          );
+          console.log(
+            "[fi-edback] URLs:",
+            data.feedback.map((f) => f.pageUrl)
+          );
           setFullFeedback(data.feedback);
-          setPins(data.feedback.map((f) => ({ id: f.id, x: f.x, y: f.y })));
+          setPins(
+            data.feedback.map((f) => ({
+              id: f.id,
+              x: f.x,
+              y: f.y,
+              viewportWidth: f.viewportWidth,
+              deviceType: f.deviceType,
+              pinColor: f.pinColor
+            }))
+          );
         }
       } catch (error) {
         console.error("[fi-edback] Failed to fetch feedback:", error);
@@ -850,17 +1018,49 @@ function FeedbackLauncher({ projectSlug }) {
     setIsActive(false);
     setPendingPin(null);
   }
-  function handlePinPlaced(x, y) {
+  function handlePinPlaced(x, y, viewportWidth, deviceType) {
     setIsActive(false);
-    setPendingPin({ x, y });
+    setPendingPin({ x, y, viewportWidth, deviceType });
   }
   function handleFormSubmitted(feedback) {
     setPins((prev) => [
       ...prev,
-      { id: feedback.id, x: feedback.x, y: feedback.y }
+      {
+        id: feedback.id,
+        x: feedback.x,
+        y: feedback.y,
+        viewportWidth: feedback.viewportWidth,
+        deviceType: feedback.deviceType,
+        pinColor: feedback.pinColor
+      }
     ]);
     setFullFeedback((prev) => [...prev, feedback]);
     setPendingPin(null);
+  }
+  async function handleExportCSV() {
+    setIsExporting(true);
+    try {
+      const response = await fetch(
+        `${API_PATH}?format=csv&projectSlug=${encodeURIComponent(projectSlug)}`
+      );
+      if (!response.ok) {
+        throw new Error("Export failed");
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `feedback-${projectSlug}-${(/* @__PURE__ */ new Date()).toISOString().split("T")[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error("Export error:", error);
+      alert("Failed to export feedback");
+    } finally {
+      setIsExporting(false);
+    }
   }
   function handleFormCancelled() {
     setPendingPin(null);
@@ -942,16 +1142,48 @@ function FeedbackLauncher({ projectSlug }) {
   const selectedFeedback = fullFeedback.find(
     (f) => f.id === selectedFeedbackId
   );
+  const visiblePins = showCrossDevicePins ? pins : pins.filter((pin) => {
+    if (!pin.viewportWidth || !currentViewportWidth) return true;
+    const diff = Math.abs(pin.viewportWidth - currentViewportWidth);
+    return diff <= 300;
+  });
   const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
   return /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(import_jsx_runtime5.Fragment, { children: [
+    !isActive && !pendingPin && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+      "button",
+      {
+        onClick: handleExportCSV,
+        disabled: isExporting,
+        "aria-label": "Export feedback as CSV",
+        style: {
+          position: "fixed",
+          bottom: isMobile ? "90px" : "24px",
+          right: isMobile ? "12px" : "380px",
+          zIndex: 9999,
+          backgroundColor: "#fff",
+          border: "1px solid #e4e4e7",
+          borderRadius: "6px",
+          padding: isMobile ? "8px 14px" : "6px 12px",
+          fontSize: isMobile ? "13px" : "12px",
+          fontWeight: "500",
+          color: isExporting ? "#71717a" : "#18181b",
+          cursor: isExporting ? "not-allowed" : "pointer",
+          fontFamily: "system-ui, sans-serif",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+          transition: "all 0.15s ease",
+          opacity: isExporting ? 0.6 : 1
+        },
+        children: isExporting ? "\u{1F4E5} ..." : `\u{1F4E5} ${t.exportCSV}`
+      }
+    ),
     !isActive && !pendingPin && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
       "div",
       {
         style: {
           position: "fixed",
           bottom: isMobile ? "90px" : "24px",
-          right: isMobile ? "12px" : "140px",
-          zIndex: 9998,
+          right: isMobile ? "12px" : "240px",
+          zIndex: 9999,
           display: "flex",
           gap: "4px",
           backgroundColor: "#fff",
@@ -981,6 +1213,31 @@ function FeedbackLauncher({ projectSlug }) {
           },
           lang
         ))
+      }
+    ),
+    !isActive && !pendingPin && pins.some((p) => p.viewportWidth) && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+      "button",
+      {
+        onClick: () => setShowCrossDevicePins(!showCrossDevicePins),
+        "aria-label": showCrossDevicePins ? "Hide cross-device pins" : "Show all pins",
+        title: showCrossDevicePins ? "Hide pins from other devices" : "Show all pins",
+        style: {
+          position: "fixed",
+          bottom: isMobile ? "90px" : "24px",
+          right: isMobile ? "12px" : "140px",
+          zIndex: 9999,
+          padding: isMobile ? "8px 12px" : "6px 10px",
+          fontSize: isMobile ? "20px" : "18px",
+          backgroundColor: "#fff",
+          border: "1px solid #e4e4e7",
+          borderRadius: "6px",
+          cursor: "pointer",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+          fontFamily: "system-ui, sans-serif",
+          opacity: showCrossDevicePins ? 1 : 0.5,
+          transition: "opacity 0.2s ease"
+        },
+        children: showCrossDevicePins ? "\u{1F441}\uFE0F" : "\u{1F6AB}"
       }
     ),
     !isActive && !pendingPin && /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(
@@ -1063,10 +1320,11 @@ function FeedbackLauncher({ projectSlug }) {
     /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
       FeedbackPinLayer,
       {
-        pins,
+        pins: visiblePins,
         onPinClick: handlePinClick,
         onPinMoved: handlePinMoved,
-        title: t.feedbackSubmitted
+        title: t.feedbackSubmitted,
+        currentViewportWidth
       },
       currentPath
     ),
@@ -1078,6 +1336,8 @@ function FeedbackLauncher({ projectSlug }) {
         projectSlug,
         apiPath: API_PATH,
         language,
+        viewportWidth: pendingPin.viewportWidth,
+        deviceType: pendingPin.deviceType,
         onSubmitted: handleFormSubmitted,
         onCancelled: handleFormCancelled
       }

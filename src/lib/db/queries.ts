@@ -17,7 +17,10 @@ export async function insertFeedback(
       email,
       session_id,
       user_agent,
-      ip_address
+      ip_address,
+      pin_color,
+      viewport_width,
+      device_type
     ) VALUES (
       ${payload.projectSlug},
       ${payload.pageUrl},
@@ -28,7 +31,10 @@ export async function insertFeedback(
       ${payload.email ?? null},
       ${payload.sessionId},
       ${payload.userAgent ?? null},
-      ${payload.ipAddress ?? null}
+      ${payload.ipAddress ?? null},
+      ${payload.pinColor ?? "#3b82f6"},
+      ${payload.viewportWidth ?? null},
+      ${payload.deviceType ?? null}
     )
     RETURNING
       id,
@@ -42,6 +48,9 @@ export async function insertFeedback(
       session_id as "sessionId",
       user_agent as "userAgent",
       ip_address as "ipAddress",
+      pin_color as "pinColor",
+      viewport_width as "viewportWidth",
+      device_type as "deviceType",
       created_at as "createdAt"
   `;
 
@@ -75,6 +84,9 @@ export async function getFeedbackForPage(
       session_id as "sessionId",
       user_agent as "userAgent",
       ip_address as "ipAddress",
+      pin_color as "pinColor",
+      viewport_width as "viewportWidth",
+      device_type as "deviceType",
       created_at as "createdAt"
     FROM fi_feedback
     WHERE project_slug = ${projectSlug}
@@ -248,4 +260,72 @@ export async function updateFeedbackPosition(
 
   // Update is successful if no error was thrown
   return true;
+}
+
+/**
+ * Export all feedback for a project as CSV-ready data
+ */
+export async function exportFeedbackAsCSV(
+  sql: NeonQueryFn,
+  projectSlug: string,
+): Promise<{
+  headers: string[];
+  rows: string[][];
+}> {
+  const result = await sql`
+    SELECT
+      f.id,
+      f.page_url,
+      f.message,
+      f.name,
+      f.email,
+      f.x,
+      f.y,
+      f.pin_color,
+      f.viewport_width,
+      f.device_type,
+      f.ip_address,
+      f.created_at,
+      STRING_AGG(DISTINCT r.reaction, '; ') AS reactions
+    FROM fi_feedback f
+    LEFT JOIN fi_feedback_reactions r ON f.id = r.feedback_id
+    WHERE f.project_slug = ${projectSlug}
+    GROUP BY f.id, f.page_url, f.message, f.name, f.email, f.x, f.y,
+             f.pin_color, f.viewport_width, f.device_type, f.ip_address, f.created_at
+    ORDER BY f.created_at DESC
+  `;
+
+  const headers = [
+    "ID",
+    "Page URL",
+    "Message",
+    "Name",
+    "Email",
+    "X Position",
+    "Y Position",
+    "Pin Color",
+    "Viewport Width",
+    "Device Type",
+    "IP Address",
+    "Created At",
+    "Reactions",
+  ];
+
+  const rows = result.map((row) => [
+    row.id,
+    row.page_url,
+    row.message,
+    row.name || "",
+    row.email || "",
+    row.x.toString(),
+    row.y.toString(),
+    row.pin_color || "",
+    row.viewport_width?.toString() || "",
+    row.device_type || "",
+    row.ip_address || "",
+    new Date(row.created_at).toISOString(),
+    row.reactions || "",
+  ]);
+
+  return { headers, rows };
 }
