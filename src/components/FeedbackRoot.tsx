@@ -17,14 +17,41 @@ export function FeedbackRoot() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    console.log("[fi-edback] FeedbackRoot mounted");
+    console.log(
+      "[fi-edback] NEXT_PUBLIC_ENABLE_FEEDBACK:",
+      process.env.NEXT_PUBLIC_ENABLE_FEEDBACK,
+    );
+    console.log(
+      "[fi-edback] NEXT_PUBLIC_FEEDBACK_PROJECT_SLUG:",
+      process.env.NEXT_PUBLIC_FEEDBACK_PROJECT_SLUG,
+    );
     setMounted(true);
   }, []);
 
-  if (!mounted) return null;
-  if (process.env.NEXT_PUBLIC_ENABLE_FEEDBACK !== "true") return null;
+  if (!mounted) {
+    console.log("[fi-edback] Not mounted yet, waiting for client-side render");
+    return null;
+  }
+
+  if (process.env.NEXT_PUBLIC_ENABLE_FEEDBACK !== "true") {
+    console.log(
+      '[fi-edback] Feedback disabled (NEXT_PUBLIC_ENABLE_FEEDBACK is not "true")',
+    );
+    return null;
+  }
 
   const projectSlug = process.env.NEXT_PUBLIC_FEEDBACK_PROJECT_SLUG;
-  if (!projectSlug) return null;
+  if (!projectSlug) {
+    console.log(
+      "[fi-edback] No project slug configured (NEXT_PUBLIC_FEEDBACK_PROJECT_SLUG missing)",
+    );
+    return null;
+  }
 
+  console.log(
+    "[fi-edback] Rendering FeedbackLauncher with projectSlug:",
+    projectSlug,
+  );
   return <FeedbackLauncher projectSlug={projectSlug} />;
 }

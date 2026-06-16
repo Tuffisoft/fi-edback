@@ -1,6 +1,6 @@
 export const translations = {
   en: {
-    feedbackButton: "Feedback",
+    feedbackButton: "Leave Feedback",
     cancelButton: "Cancel",
     instructionText:
       "Leave feedback (preview tool — not visible in production)",
@@ -21,9 +21,11 @@ export const translations = {
     reactions: "Reactions",
     pinColor: "Pin color",
     exportCSV: "Export CSV",
+    hideAll: "Hide all feedback",
+    showAll: "Show feedback tools",
   },
   de: {
-    feedbackButton: "Feedback",
+    feedbackButton: "Feedback geben",
     cancelButton: "Abbrechen",
     instructionText:
       "Feedback geben (Vorschau-Tool — nicht in Produktion sichtbar)",
@@ -44,9 +46,11 @@ export const translations = {
     reactions: "Reaktionen",
     pinColor: "Pin-Farbe",
     exportCSV: "CSV exportieren",
+    hideAll: "Alles ausblenden",
+    showAll: "Feedback-Tools anzeigen",
   },
   ga: {
-    feedbackButton: "Aiseolas",
+    feedbackButton: "Fág Aiseolas",
     cancelButton: "Cealaigh",
     instructionText:
       "Fág aiseolas (uirlis réamhamhairc — nach bhfeicfear sa táirgeadh)",
@@ -67,6 +71,8 @@ export const translations = {
     reactions: "Imoibrithe",
     pinColor: "Dath bioráin",
     exportCSV: "Easpórtáil CSV",
+    hideAll: "Folaigh gach aiseolas",
+    showAll: "Taispeáin uirlisí aiseolais",
   },
 } as const;
 

@@ -34,7 +34,7 @@ var import_react4 = require("react");
 // src/lib/i18n.ts
 var translations = {
   en: {
-    feedbackButton: "Feedback",
+    feedbackButton: "Leave Feedback",
     cancelButton: "Cancel",
     instructionText: "Leave feedback (preview tool \u2014 not visible in production)",
     messagePlaceholder: "What would you like to tell us?",
@@ -53,10 +53,12 @@ var translations = {
     anonymous: "Anonymous",
     reactions: "Reactions",
     pinColor: "Pin color",
-    exportCSV: "Export CSV"
+    exportCSV: "Export CSV",
+    hideAll: "Hide all feedback",
+    showAll: "Show feedback tools"
   },
   de: {
-    feedbackButton: "Feedback",
+    feedbackButton: "Feedback geben",
     cancelButton: "Abbrechen",
     instructionText: "Feedback geben (Vorschau-Tool \u2014 nicht in Produktion sichtbar)",
     messagePlaceholder: "Was m\xF6chten Sie uns mitteilen?",
@@ -75,10 +77,12 @@ var translations = {
     anonymous: "Anonym",
     reactions: "Reaktionen",
     pinColor: "Pin-Farbe",
-    exportCSV: "CSV exportieren"
+    exportCSV: "CSV exportieren",
+    hideAll: "Alles ausblenden",
+    showAll: "Feedback-Tools anzeigen"
   },
   ga: {
-    feedbackButton: "Aiseolas",
+    feedbackButton: "F\xE1g Aiseolas",
     cancelButton: "Cealaigh",
     instructionText: "F\xE1g aiseolas (uirlis r\xE9amhamhairc \u2014 nach bhfeicfear sa t\xE1irgeadh)",
     messagePlaceholder: "Cad ba mhaith leat a r\xE1 linn?",
@@ -97,7 +101,9 @@ var translations = {
     anonymous: "Gan ainm",
     reactions: "Imoibrithe",
     pinColor: "Dath bior\xE1in",
-    exportCSV: "Easp\xF3rt\xE1il CSV"
+    exportCSV: "Easp\xF3rt\xE1il CSV",
+    hideAll: "Folaigh gach aiseolas",
+    showAll: "Taispe\xE1in uirlis\xED aiseolais"
   }
 };
 function getTranslations(lang) {
@@ -925,6 +931,7 @@ var import_jsx_runtime5 = require("react/jsx-runtime");
 function FeedbackLauncher({ projectSlug }) {
   const [language, setLanguage] = (0, import_react4.useState)("en");
   const [isActive, setIsActive] = (0, import_react4.useState)(false);
+  const [isAllHidden, setIsAllHidden] = (0, import_react4.useState)(false);
   const [pins, setPins] = (0, import_react4.useState)([]);
   const [fullFeedback, setFullFeedback] = (0, import_react4.useState)([]);
   const [pendingPin, setPendingPin] = (0, import_react4.useState)(null);
@@ -938,14 +945,168 @@ function FeedbackLauncher({ projectSlug }) {
     typeof window !== "undefined" ? window.innerWidth : 1024
   );
   const [isExporting, setIsExporting] = (0, import_react4.useState)(false);
+  const [activeTooltip, setActiveTooltip] = (0, import_react4.useState)(null);
+  (0, import_react4.useEffect)(() => {
+    console.log(
+      `[fi-edback] \u{1F504} isAllHidden changed to:`,
+      isAllHidden,
+      new Error().stack
+    );
+  }, [isAllHidden]);
+  (0, import_react4.useEffect)(() => {
+    console.log(`[fi-edback] \u{1F504} isActive changed to:`, isActive);
+  }, [isActive]);
+  (0, import_react4.useEffect)(() => {
+    console.log(`[fi-edback] \u{1F504} pendingPin changed:`, !!pendingPin);
+  }, [pendingPin]);
   const t = getTranslations(language);
   (0, import_react4.useEffect)(() => {
+    console.log("[fi-edback] FeedbackLauncher mounted");
+    console.log("[fi-edback] projectSlug:", projectSlug);
+    console.log("[fi-edback] window.innerWidth:", window.innerWidth);
+    console.log("[fi-edback] isMobile:", window.innerWidth < 640);
+    console.log("[fi-edback] currentPath:", window.location.href);
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        mutation.removedNodes.forEach((node) => {
+          if (node instanceof HTMLElement && node.hasAttribute("data-fi-edback-grid")) {
+            console.error("[fi-edback] \u26D4 GRID CONTAINER REMOVED FROM DOM!", {
+              timestamp: Date.now(),
+              stackTrace: new Error().stack
+            });
+          }
+        });
+      });
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
+  (0, import_react4.useEffect)(() => {
+    const timestamp = Date.now();
+    console.log(`[fi-edback] Render state @${timestamp}:`, {
+      isAllHidden,
+      isActive,
+      pendingPin: !!pendingPin,
+      pinsCount: pins.length,
+      language
+    });
+    const shouldShowMainUI = !isAllHidden && !isActive && !pendingPin;
+    console.log(
+      `[fi-edback] Should show main UI @${timestamp}:`,
+      shouldShowMainUI
+    );
+    if (!shouldShowMainUI) {
+      console.warn(`[fi-edback] UI HIDDEN because:`, {
+        isAllHidden: isAllHidden ? "TRUE - hide-all is active" : "false",
+        isActive: isActive ? "TRUE - feedback mode active" : "false",
+        pendingPin: !!pendingPin ? "TRUE - form is open" : "false"
+      });
+    }
+    setTimeout(() => {
+      const gridContainer = document.querySelector("[data-fi-edback-grid]");
+      const monkeyButton = document.querySelector("[data-fi-edback-monkey]");
+      const feedbackButton = document.querySelector("[data-fi-edback-button]");
+      console.log(`[fi-edback] DOM check @${timestamp}:`, {
+        gridContainer: !!gridContainer,
+        monkeyButton: !!monkeyButton,
+        feedbackButton: !!feedbackButton
+      });
+      if (gridContainer) {
+        const gridStyles = window.getComputedStyle(gridContainer);
+        console.log("[fi-edback] Grid container styles:", {
+          display: gridStyles.display,
+          position: gridStyles.position,
+          zIndex: gridStyles.zIndex,
+          inset: gridStyles.inset,
+          visibility: gridStyles.visibility,
+          opacity: gridStyles.opacity
+        });
+      }
+      if (feedbackButton) {
+        const buttonStyles = window.getComputedStyle(feedbackButton);
+        const rect = feedbackButton.getBoundingClientRect();
+        console.log("[fi-edback] Feedback button styles:", {
+          display: buttonStyles.display,
+          position: buttonStyles.position,
+          visibility: buttonStyles.visibility,
+          opacity: buttonStyles.opacity,
+          zIndex: buttonStyles.zIndex
+        });
+        console.log("[fi-edback] Feedback button position (rect):", {
+          top: rect.top,
+          right: rect.right,
+          bottom: rect.bottom,
+          left: rect.left,
+          width: rect.width,
+          height: rect.height
+        });
+        console.log("[fi-edback] Viewport:", {
+          width: window.innerWidth,
+          height: window.innerHeight
+        });
+        const elementsAtButtonPos = document.elementsFromPoint(
+          rect.left + rect.width / 2,
+          rect.top + rect.height / 2
+        );
+        console.log(
+          "[fi-edback] Elements at button center:",
+          elementsAtButtonPos.map((el) => ({
+            tag: el.tagName,
+            id: el.id,
+            classes: el.className,
+            zIndex: window.getComputedStyle(el).zIndex
+          }))
+        );
+      }
+    }, 100);
+  }, [isAllHidden, isActive, pendingPin, pins.length, language]);
+  (0, import_react4.useEffect)(() => {
+    const interval = setInterval(() => {
+      const gridContainer = document.querySelector("[data-fi-edback-grid]");
+      const shouldExist = !isAllHidden && !isActive && !pendingPin;
+      if (shouldExist && !gridContainer) {
+        console.error("[fi-edback] \u26A0\uFE0F GRID CONTAINER MISSING from DOM!", {
+          isAllHidden,
+          isActive,
+          pendingPin: !!pendingPin,
+          timestamp: Date.now()
+        });
+      } else if (!shouldExist && gridContainer) {
+        console.warn(
+          "[fi-edback] Grid container exists but shouldn't (state changed)"
+        );
+      }
+    }, 500);
+    return () => clearInterval(interval);
+  }, [isAllHidden, isActive, pendingPin]);
+  const handleTooltipToggle = (id) => {
+    const isMobileCheck = typeof window !== "undefined" && window.innerWidth < 640;
+    if (isMobileCheck) {
+      setActiveTooltip(activeTooltip === id ? null : id);
+    }
+  };
+  (0, import_react4.useEffect)(() => {
+    const isMobileCheck = typeof window !== "undefined" && window.innerWidth < 640;
+    if (activeTooltip && isMobileCheck) {
+      const timeout = setTimeout(() => {
+        setActiveTooltip(null);
+      }, 3e3);
+      return () => clearTimeout(timeout);
+    }
+  }, [activeTooltip]);
+  (0, import_react4.useEffect)(() => {
     const handleResize = () => {
-      setCurrentViewportWidth(window.innerWidth);
+      const newWidth = window.innerWidth;
+      console.log("[fi-edback] Viewport resize:", {
+        oldWidth: currentViewportWidth,
+        newWidth,
+        heightChanged: window.innerHeight
+      });
+      setCurrentViewportWidth(newWidth);
     };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [currentViewportWidth]);
   (0, import_react4.useEffect)(() => {
     let lastPath = window.location.href;
     setCurrentPath(lastPath);
@@ -1149,150 +1310,325 @@ function FeedbackLauncher({ projectSlug }) {
   });
   const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
   return /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(import_jsx_runtime5.Fragment, { children: [
-    !isActive && !pendingPin && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
-      "button",
-      {
-        onClick: handleExportCSV,
-        disabled: isExporting,
-        "aria-label": "Export feedback as CSV",
-        style: {
-          position: "fixed",
-          bottom: isMobile ? "90px" : "24px",
-          right: isMobile ? "12px" : "380px",
-          zIndex: 9999,
-          backgroundColor: "#fff",
-          border: "1px solid #e4e4e7",
-          borderRadius: "6px",
-          padding: isMobile ? "8px 14px" : "6px 12px",
-          fontSize: isMobile ? "13px" : "12px",
-          fontWeight: "500",
-          color: isExporting ? "#71717a" : "#18181b",
-          cursor: isExporting ? "not-allowed" : "pointer",
-          fontFamily: "system-ui, sans-serif",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-          transition: "all 0.15s ease",
-          opacity: isExporting ? 0.6 : 1
-        },
-        children: isExporting ? "\u{1F4E5} ..." : `\u{1F4E5} ${t.exportCSV}`
-      }
-    ),
-    !isActive && !pendingPin && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+    !isAllHidden && !isActive && !pendingPin && /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(
       "div",
       {
+        "data-fi-edback-grid": "true",
         style: {
           position: "fixed",
-          bottom: isMobile ? "90px" : "24px",
-          right: isMobile ? "12px" : "240px",
-          zIndex: 9999,
-          display: "flex",
-          gap: "4px",
-          backgroundColor: "#fff",
-          border: "1px solid #e4e4e7",
-          borderRadius: "6px",
-          padding: "4px",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-          fontFamily: "system-ui, sans-serif"
-        },
-        children: ["en", "de", "ga"].map((lang) => /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
-          "button",
-          {
-            onClick: () => setLanguage(lang),
-            "aria-label": `Switch to ${lang.toUpperCase()}`,
-            style: {
-              padding: isMobile ? "6px 10px" : "4px 8px",
-              fontSize: isMobile ? "13px" : "12px",
-              fontWeight: language === lang ? "700" : "500",
-              color: language === lang ? "#18181b" : "#71717a",
-              backgroundColor: language === lang ? "#f4f4f5" : "transparent",
-              border: "none",
-              borderRadius: "4px",
-              cursor: "pointer",
-              transition: "all 0.15s ease"
-            },
-            children: lang.toUpperCase()
-          },
-          lang
-        ))
-      }
-    ),
-    !isActive && !pendingPin && pins.some((p) => p.viewportWidth) && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
-      "button",
-      {
-        onClick: () => setShowCrossDevicePins(!showCrossDevicePins),
-        "aria-label": showCrossDevicePins ? "Hide cross-device pins" : "Show all pins",
-        title: showCrossDevicePins ? "Hide pins from other devices" : "Show all pins",
-        style: {
-          position: "fixed",
-          bottom: isMobile ? "90px" : "24px",
-          right: isMobile ? "12px" : "140px",
-          zIndex: 9999,
-          padding: isMobile ? "8px 12px" : "6px 10px",
-          fontSize: isMobile ? "20px" : "18px",
-          backgroundColor: "#fff",
-          border: "1px solid #e4e4e7",
-          borderRadius: "6px",
-          cursor: "pointer",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-          fontFamily: "system-ui, sans-serif",
-          opacity: showCrossDevicePins ? 1 : 0.5,
-          transition: "opacity 0.2s ease"
-        },
-        children: showCrossDevicePins ? "\u{1F441}\uFE0F" : "\u{1F6AB}"
-      }
-    ),
-    !isActive && !pendingPin && /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(
-      "div",
-      {
-        style: {
-          position: "fixed",
-          bottom: isMobile ? "12px" : "24px",
-          right: isMobile ? "12px" : "24px",
+          top: 0,
+          left: 0,
+          width: "100vw",
+          height: "100dvh",
+          // Dynamic viewport height - accounts for mobile browser chrome
           zIndex: 9998,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-end",
-          gap: "8px"
+          display: "grid",
+          gridTemplateColumns: "1fr",
+          gridTemplateRows: "1fr",
+          pointerEvents: "none"
         },
         children: [
-          /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(
             "div",
             {
               style: {
-                fontSize: isMobile ? "11px" : "12px",
-                color: "#71717a",
-                fontFamily: "system-ui, sans-serif",
-                textAlign: "right",
-                maxWidth: isMobile ? "160px" : "200px",
-                lineHeight: "1.4"
+                gridArea: "1 / 1",
+                placeSelf: "start end",
+                margin: isMobile ? "60px 80px 12px 12px" : "12px",
+                // Extra top margin on mobile for browser chrome
+                position: "relative",
+                pointerEvents: "auto"
               },
-              children: t.instructionText
+              children: [
+                /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+                  "button",
+                  {
+                    "data-fi-edback-monkey": "true",
+                    onClick: () => setIsAllHidden(!isAllHidden),
+                    onMouseEnter: () => !isMobile && setActiveTooltip("hide-all"),
+                    onMouseLeave: () => !isMobile && setActiveTooltip(null),
+                    onTouchStart: () => handleTooltipToggle("hide-all"),
+                    "aria-label": t.hideAll,
+                    style: {
+                      backgroundColor: "#fff",
+                      border: "1px solid #e4e4e7",
+                      borderRadius: "50%",
+                      width: "44px",
+                      height: "44px",
+                      fontSize: "20px",
+                      cursor: "pointer",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                      transition: "all 0.2s ease",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center"
+                    },
+                    children: "\u{1F648}"
+                  }
+                ),
+                activeTooltip === "hide-all" && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+                  "div",
+                  {
+                    style: {
+                      position: "absolute",
+                      top: "100%",
+                      right: "0",
+                      marginTop: "8px",
+                      padding: "6px 10px",
+                      backgroundColor: "#18181b",
+                      color: "#fff",
+                      fontSize: "12px",
+                      borderRadius: "6px",
+                      whiteSpace: "nowrap",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+                      zIndex: 10001,
+                      pointerEvents: "none",
+                      fontFamily: "system-ui, sans-serif"
+                    },
+                    children: t.hideAll
+                  }
+                )
+              ]
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
-            "button",
+          /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(
+            "div",
             {
-              onClick: handleActivate,
-              "aria-label": "Open feedback tool",
               style: {
-                backgroundColor: "#18181b",
-                color: "#fff",
-                border: "none",
-                borderRadius: "9999px",
-                padding: isMobile ? "12px 20px" : "10px 18px",
-                fontSize: isMobile ? "15px" : "14px",
-                fontWeight: "500",
-                cursor: "pointer",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                fontFamily: "system-ui, sans-serif",
-                letterSpacing: "0.01em"
+                gridArea: "1 / 1",
+                placeSelf: "end end",
+                margin: isMobile ? "12px 12px 80px 12px" : "12px",
+                // Extra bottom margin on mobile to avoid dev toolbar
+                display: "flex",
+                flexDirection: "row",
+                flexWrap: "wrap",
+                // Allow wrapping on narrow screens
+                gap: "8px",
+                alignItems: "center",
+                justifyContent: "flex-end",
+                // Keep aligned to right when wrapping
+                pointerEvents: "auto",
+                maxWidth: isMobile ? "calc(100vw - 24px)" : "none"
+                // Prevent overflow
               },
-              children: t.feedbackButton
+              children: [
+                /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { style: { position: "relative" }, children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+                    "button",
+                    {
+                      onClick: handleExportCSV,
+                      onMouseEnter: () => !isMobile && setActiveTooltip("export"),
+                      onMouseLeave: () => !isMobile && setActiveTooltip(null),
+                      onTouchStart: () => handleTooltipToggle("export"),
+                      disabled: isExporting,
+                      "aria-label": "Export feedback as CSV",
+                      style: {
+                        backgroundColor: "#fff",
+                        border: "1px solid #e4e4e7",
+                        borderRadius: "6px",
+                        padding: isMobile ? "8px 10px" : "6px 12px",
+                        fontSize: "12px",
+                        fontWeight: "500",
+                        color: isExporting ? "#71717a" : "#18181b",
+                        cursor: isExporting ? "not-allowed" : "pointer",
+                        fontFamily: "system-ui, sans-serif",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                        transition: "all 0.15s ease",
+                        opacity: isExporting ? 0.6 : 1,
+                        whiteSpace: "nowrap"
+                      },
+                      children: isExporting ? "\u{1F4E5}" : `\u{1F4E5} ${isMobile ? "" : t.exportCSV}`
+                    }
+                  ),
+                  activeTooltip === "export" && isMobile && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+                    "div",
+                    {
+                      style: {
+                        position: "absolute",
+                        bottom: "100%",
+                        left: "50%",
+                        transform: "translateX(-50%)",
+                        marginBottom: "8px",
+                        padding: "6px 10px",
+                        backgroundColor: "#18181b",
+                        color: "#fff",
+                        fontSize: "12px",
+                        borderRadius: "6px",
+                        whiteSpace: "nowrap",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+                        zIndex: 10001,
+                        pointerEvents: "none",
+                        fontFamily: "system-ui, sans-serif"
+                      },
+                      children: t.exportCSV
+                    }
+                  )
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+                  "div",
+                  {
+                    style: {
+                      display: "flex",
+                      gap: "4px",
+                      backgroundColor: "#fff",
+                      border: "1px solid #e4e4e7",
+                      borderRadius: "6px",
+                      padding: "4px",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
+                    },
+                    children: ["en", "de", "ga"].map((lang) => /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+                      "button",
+                      {
+                        onClick: () => setLanguage(lang),
+                        "aria-label": `Switch to ${lang.toUpperCase()}`,
+                        style: {
+                          padding: isMobile ? "4px 6px" : "4px 8px",
+                          fontSize: isMobile ? "11px" : "12px",
+                          fontWeight: language === lang ? "700" : "500",
+                          color: language === lang ? "#18181b" : "#71717a",
+                          backgroundColor: language === lang ? "#f4f4f5" : "transparent",
+                          border: "none",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                          transition: "all 0.15s ease"
+                        },
+                        children: lang.toUpperCase()
+                      },
+                      lang
+                    ))
+                  }
+                ),
+                pins.some((p) => p.viewportWidth) && /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { style: { position: "relative" }, children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+                    "button",
+                    {
+                      onClick: () => setShowCrossDevicePins(!showCrossDevicePins),
+                      onMouseEnter: () => !isMobile && setActiveTooltip("filter"),
+                      onMouseLeave: () => !isMobile && setActiveTooltip(null),
+                      onTouchStart: () => handleTooltipToggle("filter"),
+                      "aria-label": showCrossDevicePins ? "Hide cross-device pins" : "Show all pins",
+                      style: {
+                        padding: isMobile ? "8px 10px" : "6px 10px",
+                        fontSize: "18px",
+                        backgroundColor: "#fff",
+                        border: "1px solid #e4e4e7",
+                        borderRadius: "6px",
+                        cursor: "pointer",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                        fontFamily: "system-ui, sans-serif",
+                        opacity: showCrossDevicePins ? 1 : 0.5,
+                        transition: "opacity 0.2s ease"
+                      },
+                      children: showCrossDevicePins ? "\u{1F441}\uFE0F" : "\u{1F6AB}"
+                    }
+                  ),
+                  activeTooltip === "filter" && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+                    "div",
+                    {
+                      style: {
+                        position: "absolute",
+                        bottom: "100%",
+                        left: "50%",
+                        transform: "translateX(-50%)",
+                        marginBottom: "8px",
+                        padding: "6px 10px",
+                        backgroundColor: "#18181b",
+                        color: "#fff",
+                        fontSize: "12px",
+                        borderRadius: "6px",
+                        whiteSpace: "nowrap",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+                        zIndex: 10001,
+                        pointerEvents: "none",
+                        fontFamily: "system-ui, sans-serif"
+                      },
+                      children: showCrossDevicePins ? "Hide cross-device pins" : "Show all pins"
+                    }
+                  )
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(
+                  "div",
+                  {
+                    style: {
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "flex-end",
+                      gap: "8px"
+                    },
+                    children: [
+                      !isMobile && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+                        "div",
+                        {
+                          style: {
+                            fontSize: "12px",
+                            color: "#71717a",
+                            fontFamily: "system-ui, sans-serif",
+                            textAlign: "right",
+                            maxWidth: "200px",
+                            lineHeight: "1.4"
+                          },
+                          children: t.instructionText
+                        }
+                      ),
+                      /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+                        "button",
+                        {
+                          "data-fi-edback-button": "true",
+                          onClick: handleActivate,
+                          "aria-label": "Open feedback tool",
+                          style: {
+                            backgroundColor: "#18181b",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: "9999px",
+                            padding: isMobile ? "10px 16px" : "10px 18px",
+                            fontSize: isMobile ? "14px" : "14px",
+                            fontWeight: "500",
+                            cursor: "pointer",
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                            fontFamily: "system-ui, sans-serif",
+                            letterSpacing: "0.01em"
+                          },
+                          children: t.feedbackButton
+                        }
+                      )
+                    ]
+                  }
+                )
+              ]
             }
           )
         ]
       }
     ),
-    isActive && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+    isAllHidden && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+      "button",
+      {
+        onClick: () => setIsAllHidden(!isAllHidden),
+        "aria-label": t.showAll,
+        title: t.showAll,
+        style: {
+          position: "fixed",
+          top: "12px",
+          right: "12px",
+          zIndex: 1e4,
+          backgroundColor: "rgba(255,255,255,0.95)",
+          border: "1px solid #e4e4e7",
+          borderRadius: "50%",
+          width: "44px",
+          height: "44px",
+          fontSize: "20px",
+          cursor: "pointer",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+          transition: "all 0.2s ease",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center"
+        },
+        children: "\u{1F441}\uFE0F"
+      }
+    ),
+    !isAllHidden && isActive && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
       "button",
       {
         onClick: handleDeactivate,
@@ -1316,8 +1652,8 @@ function FeedbackLauncher({ projectSlug }) {
         children: t.cancelButton
       }
     ),
-    isActive && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(FeedbackOverlay, { language, onPinPlaced: handlePinPlaced }),
-    /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+    !isAllHidden && isActive && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(FeedbackOverlay, { language, onPinPlaced: handlePinPlaced }),
+    !isAllHidden && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
       FeedbackPinLayer,
       {
         pins: visiblePins,
@@ -1328,7 +1664,7 @@ function FeedbackLauncher({ projectSlug }) {
       },
       currentPath
     ),
-    pendingPin && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+    !isAllHidden && pendingPin && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
       FeedbackForm,
       {
         x: pendingPin.x,
@@ -1342,7 +1678,7 @@ function FeedbackLauncher({ projectSlug }) {
         onCancelled: handleFormCancelled
       }
     ),
-    selectedFeedback && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+    !isAllHidden && selectedFeedback && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
       FeedbackPopup,
       {
         feedback: selectedFeedback,
@@ -1361,12 +1697,38 @@ var import_jsx_runtime6 = require("react/jsx-runtime");
 function FeedbackRoot() {
   const [mounted, setMounted] = (0, import_react5.useState)(false);
   (0, import_react5.useEffect)(() => {
+    console.log("[fi-edback] FeedbackRoot mounted");
+    console.log(
+      "[fi-edback] NEXT_PUBLIC_ENABLE_FEEDBACK:",
+      process.env.NEXT_PUBLIC_ENABLE_FEEDBACK
+    );
+    console.log(
+      "[fi-edback] NEXT_PUBLIC_FEEDBACK_PROJECT_SLUG:",
+      process.env.NEXT_PUBLIC_FEEDBACK_PROJECT_SLUG
+    );
     setMounted(true);
   }, []);
-  if (!mounted) return null;
-  if (process.env.NEXT_PUBLIC_ENABLE_FEEDBACK !== "true") return null;
+  if (!mounted) {
+    console.log("[fi-edback] Not mounted yet, waiting for client-side render");
+    return null;
+  }
+  if (process.env.NEXT_PUBLIC_ENABLE_FEEDBACK !== "true") {
+    console.log(
+      '[fi-edback] Feedback disabled (NEXT_PUBLIC_ENABLE_FEEDBACK is not "true")'
+    );
+    return null;
+  }
   const projectSlug = process.env.NEXT_PUBLIC_FEEDBACK_PROJECT_SLUG;
-  if (!projectSlug) return null;
+  if (!projectSlug) {
+    console.log(
+      "[fi-edback] No project slug configured (NEXT_PUBLIC_FEEDBACK_PROJECT_SLUG missing)"
+    );
+    return null;
+  }
+  console.log(
+    "[fi-edback] Rendering FeedbackLauncher with projectSlug:",
+    projectSlug
+  );
   return /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(FeedbackLauncher, { projectSlug });
 }
 // Annotate the CommonJS export names for ESM import in node:
