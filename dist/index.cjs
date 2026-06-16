@@ -318,9 +318,9 @@ function getIpAddress(request) {
 }
 function createFeedbackRouteHandler() {
   const GET = async (request) => {
-    const databaseUrl = process.env.DATABASE_URL;
+    const databaseUrl = process.env.FI_EDBACK_DATABASE_URL;
     if (!databaseUrl) {
-      console.error("[fi-edback] DATABASE_URL is not set");
+      console.error("[fi-edback] FI_EDBACK_DATABASE_URL is not set");
       return Response.json({ error: "Server misconfigured" }, { status: 500 });
     }
     const url = new URL(request.url);
@@ -387,9 +387,9 @@ function createFeedbackRouteHandler() {
     }
   };
   const POST = async (request) => {
-    const databaseUrl = process.env.DATABASE_URL;
+    const databaseUrl = process.env.FI_EDBACK_DATABASE_URL;
     if (!databaseUrl) {
-      console.error("[fi-edback] DATABASE_URL is not set");
+      console.error("[fi-edback] FI_EDBACK_DATABASE_URL is not set");
       return Response.json({ error: "Server misconfigured" }, { status: 500 });
     }
     let body;
@@ -445,9 +445,9 @@ function createFeedbackRouteHandler() {
     }
   };
   const PATCH = async (request) => {
-    const databaseUrl = process.env.DATABASE_URL;
+    const databaseUrl = process.env.FI_EDBACK_DATABASE_URL;
     if (!databaseUrl) {
-      console.error("[fi-edback] DATABASE_URL is not set");
+      console.error("[fi-edback] FI_EDBACK_DATABASE_URL is not set");
       return Response.json({ error: "Server misconfigured" }, { status: 500 });
     }
     let body;
@@ -493,9 +493,9 @@ function createFeedbackRouteHandler() {
     }
   };
   const DELETE = async (request) => {
-    const databaseUrl = process.env.DATABASE_URL;
+    const databaseUrl = process.env.FI_EDBACK_DATABASE_URL;
     if (!databaseUrl) {
-      console.error("[fi-edback] DATABASE_URL is not set");
+      console.error("[fi-edback] FI_EDBACK_DATABASE_URL is not set");
       return Response.json({ error: "Server misconfigured" }, { status: 500 });
     }
     const url = new URL(request.url);

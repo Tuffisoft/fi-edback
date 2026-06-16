@@ -16,8 +16,7 @@ Feedback is stored in a shared Neon PostgreSQL database, keyed by project slug.
 ### 0. Install
 
 ```bash
-npm i github:Tuffisoft/fi-edback
-npm i @neondatabase/serverless zod@~3.23.8
+npm install fi-edback
 ```
 
 ### 1. Route handler — `app/api/fi-edback/route.ts`
@@ -71,7 +70,7 @@ For preview-only behaviour, scope them to the **Preview** environment only.
 
 | Variable                            | Example value                          | Notes                                       |
 | ----------------------------------- | -------------------------------------- | ------------------------------------------- |
-| `DATABASE_URL`                      | `postgresql://...pooler.neon.tech/...` | Neon pooled connection string — server only |
+| `FI_EDBACK_DATABASE_URL`            | `postgresql://...pooler.neon.tech/...` | Neon pooled connection string — server only |
 | `NEXT_PUBLIC_ENABLE_FEEDBACK`       | `true`                                 | Omit or set `false` for production          |
 | `NEXT_PUBLIC_FEEDBACK_PROJECT_SLUG` | `client-acme`                          | Tags all feedback rows for this project     |
 
@@ -234,8 +233,8 @@ export const config = { matcher: "/api/fi-edback/:path*" };
 
 ```bash
 npm update fi-edback
-# or pin a specific commit:
-npm i github:Tuffisoft/fi-edback#<commit-sha>
+# or install a specific version:
+npm install fi-edback@0.4.0
 ```
 
 ## Database
@@ -268,7 +267,7 @@ Run `SQL_MIGRATION.sql` (in the fi-edback repo) once in the Neon console to crea
 | ------------------ | ------------------------------------------- | ------------------------------------- |
 | Button not visible | `NEXT_PUBLIC_ENABLE_FEEDBACK` not `"true"`  | Check env vars and restart dev server |
 | Button not visible | `NEXT_PUBLIC_FEEDBACK_PROJECT_SLUG` missing | Set the slug env var                  |
-| POST returns 500   | `DATABASE_URL` not set                      | Add server-side env var               |
+| POST returns 500   | `FI_EDBACK_DATABASE_URL` not set            | Add server-side env var               |
 | POST returns 429   | Rate limit exceeded (5 per 60s per session) | Wait 60 seconds                       |
 | Hydration error    | Old version without mounted guard           | Update to latest                      |
 

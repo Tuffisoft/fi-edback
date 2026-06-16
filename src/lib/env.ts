@@ -8,7 +8,7 @@ export function getProjectSlug(): string | null {
   return process.env.NEXT_PUBLIC_FEEDBACK_PROJECT_SLUG ?? null;
 }
 
-/** Returns the Neon pooled DATABASE_URL (server-only), or null if unset. */
+/** Returns the Neon pooled FI_EDBACK_DATABASE_URL (server-only), or null if unset. */
 export function getDatabaseUrl(): string | null {
-  return process.env.DATABASE_URL ?? null;
+  return process.env.FI_EDBACK_DATABASE_URL ?? null;
 }

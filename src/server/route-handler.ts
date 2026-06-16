@@ -42,9 +42,9 @@ export function createFeedbackRouteHandler(): {
   DELETE: RouteHandler;
 } {
   const GET: RouteHandler = async (request) => {
-    const databaseUrl = process.env.DATABASE_URL;
+    const databaseUrl = process.env.FI_EDBACK_DATABASE_URL;
     if (!databaseUrl) {
-      console.error("[fi-edback] DATABASE_URL is not set");
+      console.error("[fi-edback] FI_EDBACK_DATABASE_URL is not set");
       return Response.json({ error: "Server misconfigured" }, { status: 500 });
     }
 
@@ -132,9 +132,9 @@ export function createFeedbackRouteHandler(): {
   };
 
   const POST: RouteHandler = async (request) => {
-    const databaseUrl = process.env.DATABASE_URL;
+    const databaseUrl = process.env.FI_EDBACK_DATABASE_URL;
     if (!databaseUrl) {
-      console.error("[fi-edback] DATABASE_URL is not set");
+      console.error("[fi-edback] FI_EDBACK_DATABASE_URL is not set");
       return Response.json({ error: "Server misconfigured" }, { status: 500 });
     }
 
@@ -200,9 +200,9 @@ export function createFeedbackRouteHandler(): {
   };
 
   const PATCH: RouteHandler = async (request) => {
-    const databaseUrl = process.env.DATABASE_URL;
+    const databaseUrl = process.env.FI_EDBACK_DATABASE_URL;
     if (!databaseUrl) {
-      console.error("[fi-edback] DATABASE_URL is not set");
+      console.error("[fi-edback] FI_EDBACK_DATABASE_URL is not set");
       return Response.json({ error: "Server misconfigured" }, { status: 500 });
     }
 
@@ -266,9 +266,9 @@ export function createFeedbackRouteHandler(): {
   };
 
   const DELETE: RouteHandler = async (request) => {
-    const databaseUrl = process.env.DATABASE_URL;
+    const databaseUrl = process.env.FI_EDBACK_DATABASE_URL;
     if (!databaseUrl) {
-      console.error("[fi-edback] DATABASE_URL is not set");
+      console.error("[fi-edback] FI_EDBACK_DATABASE_URL is not set");
       return Response.json({ error: "Server misconfigured" }, { status: 500 });
     }
 

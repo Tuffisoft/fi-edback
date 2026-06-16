@@ -33,8 +33,7 @@ Floating visual feedback widget for Next.js preview deployments. Clients click a
 ### Install
 
 ```bash
-npm i github:Tuffisoft/fi-edback
-npm i @neondatabase/serverless zod
+npm install fi-edback
 ```
 
 ### 1. Route handler — `app/api/fi-edback/route.ts`
@@ -75,16 +74,16 @@ Scope `NEXT_PUBLIC_*` vars to **Preview** only so the widget never appears in pr
 
 | Variable                            | Example                                | Notes                                            |
 | ----------------------------------- | -------------------------------------- | ------------------------------------------------ |
-| `DATABASE_URL`                      | `postgresql://...pooler.neon.tech/...` | Neon pooled connection string — server only      |
+| `FI_EDBACK_DATABASE_URL`            | `postgresql://...pooler.neon.tech/...` | Neon pooled connection string — server only      |
 | `NEXT_PUBLIC_ENABLE_FEEDBACK`       | `true`                                 | Widget is hidden unless this is exactly `"true"` |
 | `NEXT_PUBLIC_FEEDBACK_PROJECT_SLUG` | `client-acme`                          | Tags all rows for this project                   |
 
 ### Per-project checklist
 
-- [ ] `npm i github:Tuffisoft/fi-edback`
+- [ ] `npm install fi-edback`
 - [ ] Create `app/api/fi-edback/route.ts`
 - [ ] Add `<FeedbackRoot />` to root layout
-- [ ] Set `DATABASE_URL` on Vercel (all scopes)
+- [ ] Set `FI_EDBACK_DATABASE_URL` on Vercel (all scopes)
 - [ ] Set `NEXT_PUBLIC_ENABLE_FEEDBACK=true` on Vercel (Preview scope only)
 - [ ] Set `NEXT_PUBLIC_FEEDBACK_PROJECT_SLUG` on Vercel (Preview scope only)
 - [ ] Deploy and test — submit feedback, check Neon table
@@ -106,7 +105,7 @@ npm install
 
 # Set up dev environment
 cd dev
-cp .env.local.example .env.local   # fill in DATABASE_URL
+cp .env.local.example .env.local   # fill in FI_EDBACK_DATABASE_URL
 npm install
 npm run dev                         # opens on localhost:3000
 ```
@@ -114,7 +113,7 @@ npm run dev                         # opens on localhost:3000
 ### Dev checklist
 
 - [ ] Neon `fi_feedback` table exists (ran `SQL_MIGRATION.sql`)
-- [ ] `dev/.env.local` has `DATABASE_URL`, `NEXT_PUBLIC_ENABLE_FEEDBACK=true`, `NEXT_PUBLIC_FEEDBACK_PROJECT_SLUG=dev`
+- [ ] `dev/.env.local` has `FI_EDBACK_DATABASE_URL`, `NEXT_PUBLIC_ENABLE_FEEDBACK=true`, `NEXT_PUBLIC_FEEDBACK_PROJECT_SLUG=dev`
 - [ ] Dev server running — Feedback button visible bottom-right
 - [ ] Click pin → fill form → submit → row appears in Neon
 
@@ -124,8 +123,8 @@ npm run dev                         # opens on localhost:3000
 
 ```bash
 npm update fi-edback
-# or pin a specific commit:
-npm i github:Tuffisoft/fi-edback#<commit-sha>
+# or install a specific version:
+npm install fi-edback@0.4.0
 ```
 
 After upgrading, rebuild if you've modified source:
@@ -155,7 +154,7 @@ cp node_modules/fi-edback/.github/instructions/fi-edback-usage.instructions.md .
 | ------------------ | ------------------------------------------- | ------------------------------------- |
 | Button not visible | `NEXT_PUBLIC_ENABLE_FEEDBACK` not `"true"`  | Check env vars and restart dev server |
 | Button not visible | `NEXT_PUBLIC_FEEDBACK_PROJECT_SLUG` missing | Set the slug env var                  |
-| POST returns 500   | `DATABASE_URL` not set                      | Add server-side env var               |
+| POST returns 500   | `FI_EDBACK_DATABASE_URL` not set            | Add server-side env var               |
 | POST returns 429   | Rate limit exceeded (5 per 60s per session) | Wait 60 seconds                       |
 | Hydration error    | Old version without mounted guard           | `npm update fi-edback`                |
 

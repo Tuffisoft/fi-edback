@@ -44,7 +44,7 @@ SQL_MIGRATION.sql       ← run once in Neon console to create fi_feedback table
 - Rate limiting is DB-based (count rows for sessionId in last 60s) — no Redis needed
 - The honeypot field is named `website` — it must be an empty string (`z.literal('')`) in the Zod schema
 - Coordinates are document-relative (`clientX + scrollX`, `clientY + scrollY`) — not viewport-relative
-- `dist/` is committed to git so `npm i github:Tuffisoft/fi-edback` works without a build step
+- Package is published to npm as `fi-edback` — users run `npm install fi-edback`
 
 ## Features
 
@@ -95,7 +95,7 @@ Two entry points:
 
 ```bash
 cd dev
-cp .env.local.example .env.local   # add DATABASE_URL
+cp .env.local.example .env.local   # add FI_EDBACK_DATABASE_URL
 npm install
 npm run dev
 ```
@@ -110,7 +110,7 @@ Tables: `fi_feedback` and `fi_feedback_reactions` in a shared Neon PostgreSQL da
 
 | Var                                 | Side   | Purpose                         |
 | ----------------------------------- | ------ | ------------------------------- |
-| `DATABASE_URL`                      | Server | Neon pooled connection string   |
+| `FI_EDBACK_DATABASE_URL`            | Server | Neon pooled connection string   |
 | `NEXT_PUBLIC_ENABLE_FEEDBACK`       | Public | Must be `"true"` to show widget |
 | `NEXT_PUBLIC_FEEDBACK_PROJECT_SLUG` | Public | Tags all rows for this project  |
 
