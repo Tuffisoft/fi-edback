@@ -1285,7 +1285,60 @@ function FeedbackLauncher({ projectSlug }) {
   });
   const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
   return /* @__PURE__ */ jsxs4(Fragment3, { children: [
-    !isAllHidden && !isActive && !pendingPin && /* @__PURE__ */ jsxs4(
+    !isAllHidden && !isActive && !pendingPin && /* @__PURE__ */ jsxs4("div", { style: { position: "relative" }, children: [
+      /* @__PURE__ */ jsx5(
+        "button",
+        {
+          "data-fi-edback-monkey": "true",
+          onClick: () => setIsAllHidden(!isAllHidden),
+          onMouseEnter: () => !isMobile && setActiveTooltip("hide-all"),
+          onMouseLeave: () => !isMobile && setActiveTooltip(null),
+          onTouchStart: () => handleTooltipToggle("hide-all"),
+          "aria-label": t.hideAll,
+          style: {
+            position: "fixed",
+            top: "12px",
+            right: "12px",
+            zIndex: 1e4,
+            backgroundColor: "rgba(255,255,255,0.95)",
+            border: "1px solid #e4e4e7",
+            borderRadius: "50%",
+            width: "44px",
+            height: "44px",
+            fontSize: "20px",
+            cursor: "pointer",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+            transition: "all 0.2s ease",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center"
+          },
+          children: "\u{1F648}"
+        }
+      ),
+      activeTooltip === "hide-all" && /* @__PURE__ */ jsx5(
+        "div",
+        {
+          style: {
+            position: "fixed",
+            top: "60px",
+            right: "12px",
+            padding: "6px 10px",
+            backgroundColor: "#18181b",
+            color: "#fff",
+            fontSize: "12px",
+            borderRadius: "6px",
+            whiteSpace: "nowrap",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+            zIndex: 10001,
+            pointerEvents: "none",
+            fontFamily: "system-ui, sans-serif"
+          },
+          children: t.hideAll
+        }
+      )
+    ] }),
+    !isAllHidden && !isActive && !pendingPin && /* @__PURE__ */ jsx5(
       "div",
       {
         "data-fi-edback-grid": "true",
@@ -1302,53 +1355,64 @@ function FeedbackLauncher({ projectSlug }) {
           gridTemplateRows: "1fr",
           pointerEvents: "none"
         },
-        children: [
-          /* @__PURE__ */ jsxs4(
-            "div",
-            {
-              style: {
-                gridArea: "1 / 1",
-                placeSelf: "start end",
-                margin: isMobile ? "60px 80px 12px 12px" : "12px",
-                // 60px top + 80px right on mobile for browser chrome clearance
-                position: "relative",
-                pointerEvents: "auto"
-              },
-              children: [
+        children: /* @__PURE__ */ jsxs4(
+          "div",
+          {
+            style: {
+              gridArea: "1 / 1",
+              placeSelf: "end end",
+              margin: isMobile ? "12px 12px 80px 12px" : "12px",
+              // 80px bottom margin on mobile for dev toolbar clearance
+              display: "flex",
+              flexDirection: "row",
+              flexWrap: "wrap",
+              // Allow wrapping on narrow screens
+              gap: "8px",
+              alignItems: "center",
+              justifyContent: "flex-end",
+              // Keep aligned to right when wrapping
+              pointerEvents: "auto",
+              maxWidth: isMobile ? "calc(100vw - 24px)" : "none"
+              // Prevent overflow
+            },
+            children: [
+              /* @__PURE__ */ jsxs4("div", { style: { position: "relative" }, children: [
                 /* @__PURE__ */ jsx5(
                   "button",
                   {
-                    "data-fi-edback-monkey": "true",
-                    onClick: () => setIsAllHidden(!isAllHidden),
-                    onMouseEnter: () => !isMobile && setActiveTooltip("hide-all"),
+                    onClick: handleExportCSV,
+                    onMouseEnter: () => !isMobile && setActiveTooltip("export"),
                     onMouseLeave: () => !isMobile && setActiveTooltip(null),
-                    onTouchStart: () => handleTooltipToggle("hide-all"),
-                    "aria-label": t.hideAll,
+                    onTouchStart: () => handleTooltipToggle("export"),
+                    disabled: isExporting,
+                    "aria-label": "Export feedback as CSV",
                     style: {
                       backgroundColor: "#fff",
                       border: "1px solid #e4e4e7",
-                      borderRadius: "50%",
-                      width: "44px",
-                      height: "44px",
-                      fontSize: "20px",
-                      cursor: "pointer",
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                      transition: "all 0.2s ease",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center"
+                      borderRadius: "6px",
+                      padding: isMobile ? "8px 10px" : "6px 12px",
+                      fontSize: "12px",
+                      fontWeight: "500",
+                      color: isExporting ? "#71717a" : "#18181b",
+                      cursor: isExporting ? "not-allowed" : "pointer",
+                      fontFamily: "system-ui, sans-serif",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                      transition: "all 0.15s ease",
+                      opacity: isExporting ? 0.6 : 1,
+                      whiteSpace: "nowrap"
                     },
-                    children: "\u{1F648}"
+                    children: isExporting ? "\u{1F4E5}" : `\u{1F4E5} ${isMobile ? "" : t.exportCSV}`
                   }
                 ),
-                activeTooltip === "hide-all" && /* @__PURE__ */ jsx5(
+                activeTooltip === "export" && isMobile && /* @__PURE__ */ jsx5(
                   "div",
                   {
                     style: {
                       position: "absolute",
-                      top: "100%",
-                      right: "0",
-                      marginTop: "8px",
+                      bottom: "100%",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                      marginBottom: "8px",
                       padding: "6px 10px",
                       backgroundColor: "#18181b",
                       color: "#fff",
@@ -1360,220 +1424,144 @@ function FeedbackLauncher({ projectSlug }) {
                       pointerEvents: "none",
                       fontFamily: "system-ui, sans-serif"
                     },
-                    children: t.hideAll
+                    children: t.exportCSV
                   }
                 )
-              ]
-            }
-          ),
-          /* @__PURE__ */ jsxs4(
-            "div",
-            {
-              style: {
-                gridArea: "1 / 1",
-                placeSelf: "end end",
-                margin: isMobile ? "12px 12px 80px 12px" : "12px",
-                // 80px bottom margin on mobile for dev toolbar clearance
-                display: "flex",
-                flexDirection: "row",
-                flexWrap: "wrap",
-                // Allow wrapping on narrow screens
-                gap: "8px",
-                alignItems: "center",
-                justifyContent: "flex-end",
-                // Keep aligned to right when wrapping
-                pointerEvents: "auto",
-                maxWidth: isMobile ? "calc(100vw - 24px)" : "none"
-                // Prevent overflow
-              },
-              children: [
-                /* @__PURE__ */ jsxs4("div", { style: { position: "relative" }, children: [
-                  /* @__PURE__ */ jsx5(
+              ] }),
+              /* @__PURE__ */ jsx5(
+                "div",
+                {
+                  style: {
+                    display: "flex",
+                    gap: "4px",
+                    backgroundColor: "#fff",
+                    border: "1px solid #e4e4e7",
+                    borderRadius: "6px",
+                    padding: "4px",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
+                  },
+                  children: ["en", "de", "ga"].map((lang) => /* @__PURE__ */ jsx5(
                     "button",
                     {
-                      onClick: handleExportCSV,
-                      onMouseEnter: () => !isMobile && setActiveTooltip("export"),
-                      onMouseLeave: () => !isMobile && setActiveTooltip(null),
-                      onTouchStart: () => handleTooltipToggle("export"),
-                      disabled: isExporting,
-                      "aria-label": "Export feedback as CSV",
+                      onClick: () => setLanguage(lang),
+                      "aria-label": `Switch to ${lang.toUpperCase()}`,
                       style: {
-                        backgroundColor: "#fff",
-                        border: "1px solid #e4e4e7",
-                        borderRadius: "6px",
-                        padding: isMobile ? "8px 10px" : "6px 12px",
-                        fontSize: "12px",
-                        fontWeight: "500",
-                        color: isExporting ? "#71717a" : "#18181b",
-                        cursor: isExporting ? "not-allowed" : "pointer",
-                        fontFamily: "system-ui, sans-serif",
-                        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                        transition: "all 0.15s ease",
-                        opacity: isExporting ? 0.6 : 1,
-                        whiteSpace: "nowrap"
+                        padding: isMobile ? "4px 6px" : "4px 8px",
+                        fontSize: isMobile ? "11px" : "12px",
+                        fontWeight: language === lang ? "700" : "500",
+                        color: language === lang ? "#18181b" : "#71717a",
+                        backgroundColor: language === lang ? "#f4f4f5" : "transparent",
+                        border: "none",
+                        borderRadius: "4px",
+                        cursor: "pointer",
+                        transition: "all 0.15s ease"
                       },
-                      children: isExporting ? "\u{1F4E5}" : `\u{1F4E5} ${isMobile ? "" : t.exportCSV}`
-                    }
-                  ),
-                  activeTooltip === "export" && isMobile && /* @__PURE__ */ jsx5(
-                    "div",
-                    {
-                      style: {
-                        position: "absolute",
-                        bottom: "100%",
-                        left: "50%",
-                        transform: "translateX(-50%)",
-                        marginBottom: "8px",
-                        padding: "6px 10px",
-                        backgroundColor: "#18181b",
-                        color: "#fff",
-                        fontSize: "12px",
-                        borderRadius: "6px",
-                        whiteSpace: "nowrap",
-                        boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-                        zIndex: 10001,
-                        pointerEvents: "none",
-                        fontFamily: "system-ui, sans-serif"
-                      },
-                      children: t.exportCSV
-                    }
-                  )
-                ] }),
+                      children: lang.toUpperCase()
+                    },
+                    lang
+                  ))
+                }
+              ),
+              pins.some((p) => p.viewportWidth) && /* @__PURE__ */ jsxs4("div", { style: { position: "relative" }, children: [
                 /* @__PURE__ */ jsx5(
-                  "div",
+                  "button",
                   {
+                    onClick: () => setShowCrossDevicePins(!showCrossDevicePins),
+                    onMouseEnter: () => !isMobile && setActiveTooltip("filter"),
+                    onMouseLeave: () => !isMobile && setActiveTooltip(null),
+                    onTouchStart: () => handleTooltipToggle("filter"),
+                    "aria-label": showCrossDevicePins ? "Hide cross-device pins" : "Show all pins",
                     style: {
-                      display: "flex",
-                      gap: "4px",
+                      padding: isMobile ? "8px 10px" : "6px 10px",
+                      fontSize: "18px",
                       backgroundColor: "#fff",
                       border: "1px solid #e4e4e7",
                       borderRadius: "6px",
-                      padding: "4px",
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
+                      cursor: "pointer",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                      fontFamily: "system-ui, sans-serif",
+                      opacity: showCrossDevicePins ? 1 : 0.5,
+                      transition: "opacity 0.2s ease"
                     },
-                    children: ["en", "de", "ga"].map((lang) => /* @__PURE__ */ jsx5(
-                      "button",
-                      {
-                        onClick: () => setLanguage(lang),
-                        "aria-label": `Switch to ${lang.toUpperCase()}`,
-                        style: {
-                          padding: isMobile ? "4px 6px" : "4px 8px",
-                          fontSize: isMobile ? "11px" : "12px",
-                          fontWeight: language === lang ? "700" : "500",
-                          color: language === lang ? "#18181b" : "#71717a",
-                          backgroundColor: language === lang ? "#f4f4f5" : "transparent",
-                          border: "none",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                          transition: "all 0.15s ease"
-                        },
-                        children: lang.toUpperCase()
-                      },
-                      lang
-                    ))
+                    children: showCrossDevicePins ? "\u{1F441}\uFE0F" : "\u{1F6AB}"
                   }
                 ),
-                pins.some((p) => p.viewportWidth) && /* @__PURE__ */ jsxs4("div", { style: { position: "relative" }, children: [
-                  /* @__PURE__ */ jsx5(
-                    "button",
-                    {
-                      onClick: () => setShowCrossDevicePins(!showCrossDevicePins),
-                      onMouseEnter: () => !isMobile && setActiveTooltip("filter"),
-                      onMouseLeave: () => !isMobile && setActiveTooltip(null),
-                      onTouchStart: () => handleTooltipToggle("filter"),
-                      "aria-label": showCrossDevicePins ? "Hide cross-device pins" : "Show all pins",
-                      style: {
-                        padding: isMobile ? "8px 10px" : "6px 10px",
-                        fontSize: "18px",
-                        backgroundColor: "#fff",
-                        border: "1px solid #e4e4e7",
-                        borderRadius: "6px",
-                        cursor: "pointer",
-                        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                        fontFamily: "system-ui, sans-serif",
-                        opacity: showCrossDevicePins ? 1 : 0.5,
-                        transition: "opacity 0.2s ease"
-                      },
-                      children: showCrossDevicePins ? "\u{1F441}\uFE0F" : "\u{1F6AB}"
-                    }
-                  ),
-                  activeTooltip === "filter" && /* @__PURE__ */ jsx5(
-                    "div",
-                    {
-                      style: {
-                        position: "absolute",
-                        bottom: "100%",
-                        left: "50%",
-                        transform: "translateX(-50%)",
-                        marginBottom: "8px",
-                        padding: "6px 10px",
-                        backgroundColor: "#18181b",
-                        color: "#fff",
-                        fontSize: "12px",
-                        borderRadius: "6px",
-                        whiteSpace: "nowrap",
-                        boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-                        zIndex: 10001,
-                        pointerEvents: "none",
-                        fontFamily: "system-ui, sans-serif"
-                      },
-                      children: showCrossDevicePins ? "Hide cross-device pins" : "Show all pins"
-                    }
-                  )
-                ] }),
-                /* @__PURE__ */ jsxs4(
+                activeTooltip === "filter" && /* @__PURE__ */ jsx5(
                   "div",
                   {
                     style: {
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "flex-end",
-                      gap: "8px"
+                      position: "absolute",
+                      bottom: "100%",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                      marginBottom: "8px",
+                      padding: "6px 10px",
+                      backgroundColor: "#18181b",
+                      color: "#fff",
+                      fontSize: "12px",
+                      borderRadius: "6px",
+                      whiteSpace: "nowrap",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+                      zIndex: 10001,
+                      pointerEvents: "none",
+                      fontFamily: "system-ui, sans-serif"
                     },
-                    children: [
-                      !isMobile && /* @__PURE__ */ jsx5(
-                        "div",
-                        {
-                          style: {
-                            fontSize: "12px",
-                            color: "#71717a",
-                            fontFamily: "system-ui, sans-serif",
-                            textAlign: "right",
-                            maxWidth: "200px",
-                            lineHeight: "1.4"
-                          },
-                          children: t.instructionText
-                        }
-                      ),
-                      /* @__PURE__ */ jsx5(
-                        "button",
-                        {
-                          "data-fi-edback-button": "true",
-                          onClick: handleActivate,
-                          "aria-label": "Open feedback tool",
-                          style: {
-                            backgroundColor: "#18181b",
-                            color: "#fff",
-                            border: "none",
-                            borderRadius: "9999px",
-                            padding: isMobile ? "10px 16px" : "10px 18px",
-                            fontSize: isMobile ? "14px" : "14px",
-                            fontWeight: "500",
-                            cursor: "pointer",
-                            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                            fontFamily: "system-ui, sans-serif",
-                            letterSpacing: "0.01em"
-                          },
-                          children: t.feedbackButton
-                        }
-                      )
-                    ]
+                    children: showCrossDevicePins ? "Hide cross-device pins" : "Show all pins"
                   }
                 )
-              ]
-            }
-          )
-        ]
+              ] }),
+              /* @__PURE__ */ jsxs4(
+                "div",
+                {
+                  style: {
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "flex-end",
+                    gap: "8px"
+                  },
+                  children: [
+                    !isMobile && /* @__PURE__ */ jsx5(
+                      "div",
+                      {
+                        style: {
+                          fontSize: "12px",
+                          color: "#71717a",
+                          fontFamily: "system-ui, sans-serif",
+                          textAlign: "right",
+                          maxWidth: "200px",
+                          lineHeight: "1.4"
+                        },
+                        children: t.instructionText
+                      }
+                    ),
+                    /* @__PURE__ */ jsx5(
+                      "button",
+                      {
+                        "data-fi-edback-button": "true",
+                        onClick: handleActivate,
+                        "aria-label": "Open feedback tool",
+                        style: {
+                          backgroundColor: "#18181b",
+                          color: "#fff",
+                          border: "none",
+                          borderRadius: "9999px",
+                          padding: isMobile ? "10px 16px" : "10px 18px",
+                          fontSize: isMobile ? "14px" : "14px",
+                          fontWeight: "500",
+                          cursor: "pointer",
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                          fontFamily: "system-ui, sans-serif",
+                          letterSpacing: "0.01em"
+                        },
+                        children: t.feedbackButton
+                      }
+                    )
+                  ]
+                }
+              )
+            ]
+          }
+        )
       }
     ),
     isAllHidden && /* @__PURE__ */ jsx5(

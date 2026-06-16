@@ -502,6 +502,61 @@ export function FeedbackLauncher({ projectSlug }: FeedbackLauncherProps) {
 
   return (
     <>
+      {/* Monkey emoji at top-right */}
+      {!isAllHidden && !isActive && !pendingPin && (
+        <div style={{ position: "relative" }}>
+          <button
+            data-fi-edback-monkey="true"
+            onClick={() => setIsAllHidden(!isAllHidden)}
+            onMouseEnter={() => !isMobile && setActiveTooltip("hide-all")}
+            onMouseLeave={() => !isMobile && setActiveTooltip(null)}
+            onTouchStart={() => handleTooltipToggle("hide-all")}
+            aria-label={t.hideAll}
+            style={{
+              position: "fixed",
+              top: "12px",
+              right: "12px",
+              zIndex: 10000,
+              backgroundColor: "rgba(255,255,255,0.95)",
+              border: "1px solid #e4e4e7",
+              borderRadius: "50%",
+              width: "44px",
+              height: "44px",
+              fontSize: "20px",
+              cursor: "pointer",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+              transition: "all 0.2s ease",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            🙈
+          </button>
+          {activeTooltip === "hide-all" && (
+            <div
+              style={{
+                position: "fixed",
+                top: "60px",
+                right: "12px",
+                padding: "6px 10px",
+                backgroundColor: "#18181b",
+                color: "#fff",
+                fontSize: "12px",
+                borderRadius: "6px",
+                whiteSpace: "nowrap",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+                zIndex: 10001,
+                pointerEvents: "none",
+                fontFamily: "system-ui, sans-serif",
+              }}
+            >
+              {t.hideAll}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Grid Container - Overlapping layout */}
       {!isAllHidden && !isActive && !pendingPin && (
         <div
@@ -519,64 +574,6 @@ export function FeedbackLauncher({ projectSlug }: FeedbackLauncherProps) {
             pointerEvents: "none",
           }}
         >
-          {/* Monkey emoji at top-right */}
-          <div
-            style={{
-              gridArea: "1 / 1",
-              placeSelf: "start end",
-              margin: isMobile ? "60px 80px 12px 12px" : "12px", // 60px top + 80px right on mobile for browser chrome clearance
-              position: "relative",
-              pointerEvents: "auto",
-            }}
-          >
-            <button
-              data-fi-edback-monkey="true"
-              onClick={() => setIsAllHidden(!isAllHidden)}
-              onMouseEnter={() => !isMobile && setActiveTooltip("hide-all")}
-              onMouseLeave={() => !isMobile && setActiveTooltip(null)}
-              onTouchStart={() => handleTooltipToggle("hide-all")}
-              aria-label={t.hideAll}
-              style={{
-                backgroundColor: "#fff",
-                border: "1px solid #e4e4e7",
-                borderRadius: "50%",
-                width: "44px",
-                height: "44px",
-                fontSize: "20px",
-                cursor: "pointer",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                transition: "all 0.2s ease",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              🙈
-            </button>
-            {activeTooltip === "hide-all" && (
-              <div
-                style={{
-                  position: "absolute",
-                  top: "100%",
-                  right: "0",
-                  marginTop: "8px",
-                  padding: "6px 10px",
-                  backgroundColor: "#18181b",
-                  color: "#fff",
-                  fontSize: "12px",
-                  borderRadius: "6px",
-                  whiteSpace: "nowrap",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-                  zIndex: 10001,
-                  pointerEvents: "none",
-                  fontFamily: "system-ui, sans-serif",
-                }}
-              >
-                {t.hideAll}
-              </div>
-            )}
-          </div>
-
           {/* Bottom-right controls row */}
           <div
             style={{
