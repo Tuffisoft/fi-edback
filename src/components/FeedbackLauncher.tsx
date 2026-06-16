@@ -519,12 +519,12 @@ export function FeedbackLauncher({ projectSlug }: FeedbackLauncherProps) {
             pointerEvents: "none",
           }}
         >
-          {/* Monkey emoji at top-center */}
+          {/* Monkey emoji at top-right */}
           <div
             style={{
               gridArea: "1 / 1",
               placeSelf: "start end",
-              margin: isMobile ? "60px 80px 12px 12px" : "12px", // Extra top margin on mobile for browser chrome
+              margin: isMobile ? "60px 80px 12px 12px" : "12px", // 60px top + 80px right on mobile for browser chrome clearance
               position: "relative",
               pointerEvents: "auto",
             }}
@@ -582,7 +582,7 @@ export function FeedbackLauncher({ projectSlug }: FeedbackLauncherProps) {
             style={{
               gridArea: "1 / 1",
               placeSelf: "end end",
-              margin: isMobile ? "12px 12px 80px 12px" : "12px", // Extra bottom margin on mobile to avoid dev toolbar
+              margin: isMobile ? "12px 12px 80px 12px" : "12px", // 80px bottom margin on mobile for dev toolbar clearance
               display: "flex",
               flexDirection: "row",
               flexWrap: "wrap", // Allow wrapping on narrow screens

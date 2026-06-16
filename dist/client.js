@@ -1310,7 +1310,7 @@ function FeedbackLauncher({ projectSlug }) {
                 gridArea: "1 / 1",
                 placeSelf: "start end",
                 margin: isMobile ? "60px 80px 12px 12px" : "12px",
-                // Extra top margin on mobile for browser chrome
+                // 60px top + 80px right on mobile for browser chrome clearance
                 position: "relative",
                 pointerEvents: "auto"
               },
@@ -1373,7 +1373,7 @@ function FeedbackLauncher({ projectSlug }) {
                 gridArea: "1 / 1",
                 placeSelf: "end end",
                 margin: isMobile ? "12px 12px 80px 12px" : "12px",
-                // Extra bottom margin on mobile to avoid dev toolbar
+                // 80px bottom margin on mobile for dev toolbar clearance
                 display: "flex",
                 flexDirection: "row",
                 flexWrap: "wrap",

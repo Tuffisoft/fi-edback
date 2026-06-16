@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.9.0",
-    "fi-edback": "file:../fi-edback-0.3.0.tgz",
+    "fi-edback": "file:../fi-edback-0.4.0.tgz",
     "next": "16.2.9",
     "react": "19.2.4",
     "react-dom": "19.2.4",
